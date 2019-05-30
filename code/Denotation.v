@@ -1,8 +1,5 @@
-(** Remark. Some material in this lecture is from << Software Foundation >>
-volume 1 and volume 2. *)
-
 Require Import Coq.Lists.List.
-Require Import AB.Imp6.
+Require Import AB.Imp8.
 
 (* ################################################################# *)
 (** * Review: Denotations *)
@@ -131,40 +128,3 @@ Fixpoint ceval (c: com): state -> Z -> state -> Prop :=
   end.
 
 End Command_Denotation_With_Steps.
-
-Module Denotation_With_Asymptotic_Bound.
-
-(*
-
-forall n, ceval st(n) t st'(n) == T(n) = t
-
-T = O(f) == exists a, N, forall n, n > N -> 0 < T(n) <= f(n)
-
-forall n, {{P(n)}} c {{Q(n)}} O(f(n))
-
-*)
-
-(*
-{{P(n)}} Skip {{P(n)}} O(1)
-
-{{P}} X ::= E {{Q}} O(1)
-
-P(n) |- P'(n) ->
-{{P'(n)}} c {{Q'(n)}} O(f(n)) ->
-Q'(n) |- Q(n) ->
-{{P(n)}} c {{Q(n)}} O(f(n))
-
-{{P(n)}} c1 {{Q(n)}} O(f(n)) ->
-{{Q(n)}} c2 {{R(n)}} O(g(n)) ->
-{{P(n)}} c1;;c2 {{R(n)}} O((f+g)(n))
-
-{{P(n) AND [[b]]}} c1 {{Q(n)}} O(f(n)) ->
-{{P(n) AND NOT [[b]]}} c2 {{Q(n)}} O(f(n)) ->
-{{P(n)}} If b Then c1 Else c2 EndIf {{Q(n)}} O(f(n)).
-
-{{P(n) AND V(n) AND [[b]]}} c {{P(n) AND V(n')}} O(f(n)) ->
-O(g(n)) satisfy T(n) = T(n') + O(f(n)) ->
-{{P(n) AND V(n)}} While b Do c EndWhile {{P(n) AND V(0) AND NOT [[b]]}} O(g(n))
-*)
-
-End Denotation_With_Asymptotic_Bound.
