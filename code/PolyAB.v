@@ -1,5 +1,6 @@
 Require Import AB.Imp8.
 Require Import Coq.ZArith.ZArith.
+Require Import Coq.Lists.List.
 
 Open Scope Z.
 
@@ -8,11 +9,14 @@ Import Assertion_D.
 Open Scope term_scope.
 
 (* TODO: Implement polynomial type *)
-Inductive poly : Type.
+Definition poly := list (Z * nat).
 
 (* TODO: Implement polynomial evaluation *)
-Fixpoint poly_eval (p : poly) : Z -> Z :=
-  fun z => z.
+Fixpoint poly_eval (n : nat) (p : poly) :Z :=
+  match p with
+  | nil => 0
+  | (k, o)::tail => k * (Zpower_nat (Z.of_nat n) o) + (poly_eval n tail)
+  end.
 
 Print aexp'.
 (* TODO: Implement polynomial evaluation to aexp' *)
