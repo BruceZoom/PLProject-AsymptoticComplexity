@@ -6,57 +6,64 @@ Open Scope Z.
 
 Module Polynomial.
 Import Assertion_D.
+
+Definition poly := list Z. (* The power decreases as the index goes up *)
+
+(** Evaluations of polynomial *)
+Fixpoint poly_eval (p : poly) : Z -> Z :=
+  fun z =>
+    match p with
+    | nil => 0
+    | h :: t => h * (Z.pow z (Z.of_nat (length t))) + (poly_eval t z)
+    end.
+
 Open Scope term_scope.
-
-(* TODO: Implement polynomial type *)
-Definition poly := list Z.
-
-(* TODO: Implement polynomial evaluation *)
-Fixpoint poly_eval (n : nat) (p : poly) :Z :=
-  match p with
-  | nil => 0
-  | h::t => h * (Z.pow (Z.of_nat n) (Z.of_nat (length t))) + (poly_eval n t)
-  end.
-
-Compute poly_eval 2%nat (1::2::3::nil).
-
 Print aexp'.
-(* TODO: Implement polynomial evaluation to aexp' *)
-Fixpoint poly_eval_lv (p : poly) : logical_var -> term :=
-  fun v => v+1.
 
-(* TODO: Implement polynomial addition *)
-(*Fixpoint poly_add (p1 p2 : poly) : poly :=
-  let fix poly_add_aux (p2: poly) : poly :=
-      match p1, p2 with
-      | nil, nil => nil
-      | _ , nil => p1
-      | nil, _ => p2
-      | (k,o)::t, (k', o')::t' =>
-        match (Z.of_nat o) ?= (Z.of_nat o') with
-        | Lt => (k', o')::(poly_add_aux t')
-        | Eq => ((Z.add k k'), o)::(poly_add t t')
-        | Gt => (k, o)::(poly_add t p2)
-        end
-      end in poly_add_aux p2.*)
-Fixpoint poly_add (p1 p2 : poly) : poly :=
-  match rev p2 with
-  | nil => p1
-  | h'::t' =>
-    match rev p1 with
-    | nil => p2
-    | h::t =>
-      rev ((Z.add h h')::(poly_add (rev t) (rev t')))
-    end
+Fixpoint TPower (v : logical_var) (n : nat) : term :=
+  match n with
+  | O => 1
+  | S n' => v * (TPower v n')
   end.
 
-
-
-
-(* TODO: Implement polynomial multiplication *)
-Fixpoint poly_mult (p1 p2 : poly) : poly := p1.
+Fixpoint poly_eval_lv (p : poly) : logical_var -> term :=
+  fun v =>
+    match p with
+    | nil => 0
+    | h :: t => h * (TPower v (length t)) + (poly_eval_lv t v)
+    end.
 
 Close Scope term_scope.
+(** [] *)
+
+(** Operations of polynomial *)
+Fixpoint poly_add_body (l1 l2 : list Z) : list Z :=
+  match l1, l2 with
+  | nil, nil => l2
+  | h::t, nil => h::t
+  | nil, h::t => h::t
+  | h::t, h'::t' => (h+h')::(poly_add_body t t')
+  end.
+
+Definition poly_add (p1 p2 : poly) : poly := rev (poly_add_body (rev p1) (rev p2)).
+
+Fixpoint poly_mult (p1 p2 : poly) : poly :=
+  match p1 with
+  | nil => nil
+  | h :: t => poly_add (app p2 (repeat 0 (length t))) (poly_mult t p2)
+  end.
+(** [] *)
+
+Example poly_add_eg : poly_eval (poly_add (1::1::nil) (1::0::1::nil)) 2 = 8.
+Proof.
+  simpl. reflexivity.
+Qed.
+
+Example poly_mult_eg : poly_eval (poly_mult (1::1::nil) (1::0::1::nil)) 2 = 15.
+Proof.
+  simpl. reflexivity.
+Qed.
+
 End Polynomial.
 
 Module Polynomial_Asympotitic_Bound.
