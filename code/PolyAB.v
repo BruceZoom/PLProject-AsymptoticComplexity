@@ -9,14 +9,16 @@ Import Assertion_D.
 Open Scope term_scope.
 
 (* TODO: Implement polynomial type *)
-Definition poly := list (Z * nat).
+Definition poly := list Z.
 
 (* TODO: Implement polynomial evaluation *)
 Fixpoint poly_eval (n : nat) (p : poly) :Z :=
   match p with
   | nil => 0
-  | (k, o)::tail => k * (Zpower_nat (Z.of_nat n) o) + (poly_eval n tail)
+  | h::t => h * (Z.pow (Z.of_nat n) (Z.of_nat (length t))) + (poly_eval n t)
   end.
+
+Compute poly_eval 2%nat (1::2::3::nil).
 
 Print aexp'.
 (* TODO: Implement polynomial evaluation to aexp' *)
@@ -24,7 +26,7 @@ Fixpoint poly_eval_lv (p : poly) : logical_var -> term :=
   fun v => v+1.
 
 (* TODO: Implement polynomial addition *)
-Fixpoint poly_add (p1 p2 : poly) : poly :=
+(*Fixpoint poly_add (p1 p2 : poly) : poly :=
   let fix poly_add_aux (p2: poly) : poly :=
       match p1, p2 with
       | nil, nil => nil
@@ -36,7 +38,18 @@ Fixpoint poly_add (p1 p2 : poly) : poly :=
         | Eq => ((Z.add k k'), o)::(poly_add t t')
         | Gt => (k, o)::(poly_add t p2)
         end
-      end in poly_add_aux p2.
+      end in poly_add_aux p2.*)
+Fixpoint poly_add (p1 p2 : poly) : poly :=
+  match rev p2 with
+  | nil => p1
+  | h'::t' =>
+    match rev p1 with
+    | nil => p2
+    | h::t =>
+      rev ((Z.add h h')::(poly_add (rev t) (rev t')))
+    end
+  end.
+
 
 
 
