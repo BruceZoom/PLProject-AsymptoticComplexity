@@ -25,17 +25,20 @@ Fixpoint poly_eval_lv (p : poly) : logical_var -> term :=
 
 (* TODO: Implement polynomial addition *)
 Fixpoint poly_add (p1 p2 : poly) : poly :=
-  match p1, p2 with
-  | nil, nil => nil
-  | (k, o)::t, nil => p1
-  | nil, (k', o')::t' => p2
-  | (k,o)::t, (k', o')::t' =>
-    match (Z.of_nat o) ?= (Z.of_nat o') with
-    | Lt => (k', o')::(poly_add p1 t')
-    | Eq => ((Z.add k k'), o)::(poly_add t t')
-    | Gt => (k, o)::(poly_add t p2)
-    end
-  end.
+  let fix poly_add_aux (p2: poly) : poly :=
+      match p1, p2 with
+      | nil, nil => nil
+      | _ , nil => p1
+      | nil, _ => p2
+      | (k,o)::t, (k', o')::t' =>
+        match (Z.of_nat o) ?= (Z.of_nat o') with
+        | Lt => (k', o')::(poly_add_aux t')
+        | Eq => ((Z.add k k'), o)::(poly_add t t')
+        | Gt => (k, o)::(poly_add t p2)
+        end
+      end in poly_add_aux p2.
+
+
 
 (* TODO: Implement polynomial multiplication *)
 Fixpoint poly_mult (p1 p2 : poly) : poly := p1.
