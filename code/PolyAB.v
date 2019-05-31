@@ -52,6 +52,18 @@ Fixpoint poly_mult (p1 p2 : poly) : poly :=
   | nil => nil
   | h :: t => poly_add (app p2 (repeat 0 (length t))) (poly_mult t p2)
   end.
+
+Fixpoint trim_0_l (p : poly) : poly :=
+  match p with
+  | nil => nil
+  | h :: t => if Z.eq_dec h 0 then trim_0_l t else h :: t
+  end.
+
+Definition highest_nonneg (p : poly) : Prop :=
+  match trim_0_l p with
+  | nil => True
+  | h :: t => h >= 0
+  end.
 (** [] *)
 
 Example poly_add_eg : poly_eval (poly_add (1::1::nil) (1::0::1::nil)) 2 = 8.
@@ -89,9 +101,31 @@ Reserved Notation "T1 '=<' T2" (at level 50, no associativity).
 
 Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
   | Theta2Omega : forall p n, BigTheta p n =< BigOmega p n
-  | Theta2O : forall p n, BigTheta p n =< BigO p n
-  (* TODO: real loosenings *)
+  | Theta2O : forall p n, highest_nonneg p -> BigTheta p n =< BigO p n
+  | HighestEquivTheta : forall p1 p2 n,
+                      length (trim_0_l p1) = length (trim_0_l p2) ->
+                      BigTheta p1 n =< BigTheta p2 n
+  (* TODO: more highest equiv loosenings *)
+  (* TODO: other loosenings *)
   
   where "T1 '=<' T2" := (loosen T1 T2).
+
+(* TODO: prove loosening correctness *)
+Theorem loosen_valid :
+  forall T1 T2, T1 =< T2 ->
+  (exists (a1 a2 N : Z), forall La t, ab_eval La T1 a1 a2 N t) ->
+  exists (a1' a2' N' : Z), forall La t, ab_eval La T2 a1' a2' N' t.
+Proof.
+  intros. revert H0.
+  induction H; intros [a1 [a2 [N ?]]].
+  - simpl in *.
+    exists a1, a2, N.
+    intros.
+    pose proof H La t H0. omega.
+  - simpl in *.
+    exists a1, a2, N.
+    intros.
+    Admitted. (* how to use nonnegtivity *)
+
 
 End Polynomial_Asympotitic_Bound.
