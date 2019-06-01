@@ -117,22 +117,37 @@ Proof.
     specialize (H6 H9); clear H9.
     clear H1 H2 H3 H H0.
     destruct H5, H6.
+    remember H4 as H5; clear HeqH5 H4.
+    destruct H, H1.
+    remember (poly_eval p1 (La n)) as T1.
+    remember (poly_eval p2 (La n)) as T2.
+    pose proof H as H'.
+    rewrite (Z.mul_nonneg_cancel_l _ _ h1) in H'.
+    pose proof H1 as H1'.
+    rewrite (Z.mul_nonneg_cancel_l _ _ h1') in H1'.
+    assert (0 <= a1' * T1). apply Z.mul_nonneg_nonneg; omega.
+    assert (0 <= a1 * T2). apply Z.mul_nonneg_nonneg; omega.
     split.
-    - rewrite poly_add_eval_comm.
-      
+    - rewrite poly_add_eval_comm, Z.mul_add_distr_l.
+      rewrite <- HeqT1. rewrite <- HeqT2.
+      pose proof Z.mul_min_distr_nonneg_r a1 a1' _ H'.
+      pose proof Z.mul_min_distr_nonneg_r a1 a1' _ H1'.
+      rewrite <- H8; clear H8.
+      rewrite <- H9; clear H9.
+      pose proof Z.min_glb _ _ _ H H6.
+      pose proof Z.min_glb _ _ _ H7 H1.
+      pose proof Z.le_min_l (a1 * T1) (a1' * T1).
+      pose proof Z.le_min_r (a1 * T2) (a1' * T2).
+      omega.
+    - rewrite poly_add_eval_comm, Z.mul_add_distr_l.
+      rewrite <- HeqT1. rewrite <- HeqT2.
+      pose proof Z.mul_max_distr_nonneg_r a2 a2' _ H'.
+      pose proof Z.mul_max_distr_nonneg_r a2 a2' _ H1'.
+      rewrite <- H8; clear H8.
+      rewrite <- H9; clear H9.
+      pose proof Z.le_max_l (a2 * T1) (a2' * T1).
+      pose proof Z.le_max_r (a2 * T2) (a2' * T2).
+      omega.
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Qed.
 (** [] *)
