@@ -25,7 +25,7 @@ Notation "|==  Tr" := (valid Tr) (at level 91, no associativity).
 (** Soundness Proof *)
 
 Lemma hoare_skip_sound : forall P n,
-  |== {{P}} Skip {{P}} $ BigTheta nil n.
+  |== {{P}} Skip {{P}} $ BigTheta (1::nil) n.
 Proof.
   unfold valid.
   exists 1, 1, 1.
@@ -83,7 +83,7 @@ Proof.
   }
 Qed.
 
-Lemma hoare_seq_sound_bigtheta : forall (P Q R: Assertion) (c1 c2: com) (p1 p2 : poly) (n : logical_var),
+Lemma hoare_seq_bigtheta_sound : forall (P Q R: Assertion) (c1 c2: com) (p1 p2 : poly) (n : logical_var),
   |== {{P}} c1 {{Q}} $ BigTheta p1 n ->
   |== {{Q}} c2 {{R}} $ BigTheta p2 n ->
   |== {{P}} c1;;c2 {{R}} $ BigTheta (poly_add p1 p2) n.
@@ -119,6 +119,7 @@ Proof.
     destruct H5, H6.
     remember H4 as H5; clear HeqH5 H4.
     destruct H, H1.
+    
     remember (poly_eval p1 (La n)) as T1.
     remember (poly_eval p2 (La n)) as T2.
     pose proof H as H'.
@@ -127,6 +128,7 @@ Proof.
     rewrite (Z.mul_nonneg_cancel_l _ _ h1') in H1'.
     assert (0 <= a1' * T1). apply Z.mul_nonneg_nonneg; omega.
     assert (0 <= a1 * T2). apply Z.mul_nonneg_nonneg; omega.
+    
     split.
     - rewrite poly_add_eval_comm, Z.mul_add_distr_l.
       rewrite <- HeqT1. rewrite <- HeqT2.
@@ -150,4 +152,143 @@ Proof.
       omega.
   }
 Qed.
+
+Lemma command_cost_time : forall c st1 st2 t,
+  ceval c st1 t st2 -> 0 < t.
+Proof.
+  intro.
+  induction c; intros; simpl in H.
+  - unfold skip_sem in H. omega.
+  - unfold asgn_sem in H. omega.
+  - unfold seq_sem in H.
+    destruct H as [t1 [t2 [st3 [? [? ?]]]]].
+    specialize (IHc1 st1 st3 t1 H).
+    specialize (IHc2 st3 st2 t2 H0).
+    omega.
+  - unfold if_sem in H.
+    destruct H as [[? ?] | [? ?]].
+    + specialize (IHc1 st1 st2 (t-1) H). omega.
+    + specialize (IHc2 st1 st2 (t-1) H). omega.
+  - unfold loop_sem in H. destruct H as [n ?].
+    generalize dependent t. revert st2. revert st1.
+    induction n; intros.
+    + simpl in H. omega.
+    + simpl in H.
+      destruct H.
+      destruct H as [t1 [t2 [st3 [? [? ?]]]]].
+      specialize (IHn _ _ _ H1).
+      specialize (IHc _ _ _ H).
+      omega.
+Qed.
+
+Lemma hoare_if_same_sound : forall P Q (b: bexp) c1 c2 T,
+  |== {{ P AND {[b]} }} c1 {{ Q }} $ T ->
+  |== {{ P AND NOT {[b]} }} c2 {{ Q }} $ T ->
+  |== {{ P }} If b Then c1 Else c2 EndIf {{ Q }} $ T.
+Proof.
+  unfold valid.
+  intros.
+  destruct H as [a1 [a2 [N [h1 [h2 [h3 ?]]]]]].
+  destruct H0 as [a1' [a2' [N' [h1' [h2' [h3' ?]]]]]].
+  simpl in *.
+  exists (Z.min a1 a1'), (2 * (Z.max a2 a2')), (Z.max N N').
+  
+  split. apply (Z.min_glb_lt _ _ _ h1 h1').
+  split. pose proof Z.le_max_l a2 a2'. omega.
+  split. pose proof Z.le_max_l N N'. omega.
+  
+  intros.
+  unfold if_sem in H2.
+  destruct H2 as [[? ?] | [? ?]].
+  - (* if branch *)
+    pose proof beval_bexp'_denote st1 La b.
+    pose proof H La st1 st2 (t-1).
+    split.
+    {
+      tauto.
+    }
+    {
+      assert (ab_eval La T a1 a2 N (t - 1)) as HAB. tauto.
+      pose proof command_cost_time _ _ _ _ H2 as HT.
+      clear H H0 H1 H2 H3 H4 H5.
+      destruct T;
+      unfold ab_eval in *;
+      intros;
+      pose proof Z.max_lub_l _ _ _ H;
+      pose proof Z.max_lub_r _ _ _ H;
+      clear H;
+      remember (poly_eval p (La l)) as T.
+      - (* BigO *) admit.
+      - (* BigOmega *) admit.
+      - (* BigTheta *)
+        pose proof HAB H0 as [[? ?] ?].
+        pose proof H.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h1) in H4.
+        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H4).
+        rewrite <- Z.mul_assoc.
+        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H4).
+        assert (0 <= a1' * T). apply Z.mul_nonneg_nonneg; omega.
+        assert (0 <= a1 * T). apply Z.mul_nonneg_nonneg; omega.
+        clear H4.
+        split.
+        + pose proof Z.le_min_l (a1 * T) (a1' * T).
+          pose proof Z.min_glb _ _ _ H H5.
+          omega.
+        + pose proof Z.le_max_l (a2 * T) (a2' * T).
+          assert (t <= 2 * t - 2).
+          {
+            rewrite <- Z.add_diag.
+            rewrite <- Z.add_sub_assoc.
+            rewrite <- Z.add_0_r at 1.
+            apply Zplus_le_compat_l.
+            omega.
+          }
+          omega.
+    }
+  - (* else branch *)
+    pose proof beval_bexp'_denote st1 La b.
+    pose proof H0 La st1 st2 (t-1).
+    split.
+    {
+      tauto.
+    }
+    {
+      assert (ab_eval La T a1' a2' N' (t - 1)) as HAB. tauto.
+      pose proof command_cost_time _ _ _ _ H2 as HT.
+      clear H H0 H1 H2 H3 H4 H5.
+      destruct T;
+      unfold ab_eval in *;
+      intros;
+      pose proof Z.max_lub_l _ _ _ H;
+      pose proof Z.max_lub_r _ _ _ H;
+      clear H;
+      remember (poly_eval p (La l)) as T.
+      - (* BigO *) admit.
+      - (* BigOmega *) admit.
+      - (* BigTheta *)
+        pose proof HAB H1 as [[? ?] ?].
+        pose proof H.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h1') in H4.
+        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H4).
+        rewrite <- Z.mul_assoc.
+        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H4).
+        assert (0 <= a1' * T). apply Z.mul_nonneg_nonneg; omega.
+        assert (0 <= a1 * T). apply Z.mul_nonneg_nonneg; omega.
+        clear H4.
+        split.
+        + pose proof Z.le_min_r (a1 * T) (a1' * T).
+          pose proof Z.min_glb _ _ _ H6 H5.
+          omega.
+        + pose proof Z.le_max_r (a2 * T) (a2' * T).
+          assert (t <= 2 * t - 2).
+          {
+            rewrite <- Z.add_diag.
+            rewrite <- Z.add_sub_assoc.
+            rewrite <- Z.add_0_r at 1.
+            apply Zplus_le_compat_l.
+            omega.
+          }
+          omega.
+    }
+Admitted. (* The most complicated branches of BigTheta have been proven *)
 (** [] *)

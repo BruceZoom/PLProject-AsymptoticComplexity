@@ -63,7 +63,7 @@ only if executing [c] from [st1] may take time [t] and stop at state [st2]. *)
 
 Definition skip_sem: state -> Z -> state -> Prop :=
   fun st1 t st2 =>
-    st1 = st2 /\ t = 0.
+    st1 = st2 /\ t = 1. (* <-- modified *)
 
 Definition asgn_sem (X: var) (E: aexp): state -> Z -> state -> Prop :=
   fun st1 t st2 =>
