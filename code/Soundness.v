@@ -218,8 +218,23 @@ Proof.
       pose proof Z.max_lub_r _ _ _ H;
       clear H;
       remember (poly_eval p (La l)) as T.
-      - (* BigO *) admit.
-      - (* BigOmega *) admit.
+      - (* BigO *)
+        pose proof HAB H0 as [? ?].
+        assert (0 <= a2 * T). omega.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h2) in H3.
+        rewrite <- Z.mul_assoc.
+        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H3).
+        pose proof Z.le_max_l (a2 * T) (a2' * T).
+        omega.
+      - (* BigOmega *)
+        pose proof HAB H0 as [? ?].
+        pose proof H.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h1) in H3.
+        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H3).
+        pose proof Z.le_min_l (a1 * T) (a1' * T).
+        assert (0 <= a1' * T). apply Z.mul_nonneg_nonneg; omega.
+        pose proof Z.min_glb _ _ _ H H5.
+        omega.
       - (* BigTheta *)
         pose proof HAB H0 as [[? ?] ?].
         pose proof H.
@@ -263,8 +278,23 @@ Proof.
       pose proof Z.max_lub_r _ _ _ H;
       clear H;
       remember (poly_eval p (La l)) as T.
-      - (* BigO *) admit.
-      - (* BigOmega *) admit.
+      - (* BigO *)
+        pose proof HAB H1 as [? ?].
+        assert (0 <= a2' * T). omega.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h2') in H3.
+        rewrite <- Z.mul_assoc.
+        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H3).
+        pose proof Z.le_max_r (a2 * T) (a2' * T).
+        omega.
+      - (* BigOmega *)
+        pose proof HAB H1 as [? ?].
+        pose proof H.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h1') in H3.
+        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H3).
+        pose proof Z.le_min_r (a1 * T) (a1' * T).
+        assert (0 <= a1 * T). apply Z.mul_nonneg_nonneg; omega.
+        pose proof Z.min_glb _ _ _ H5 H.
+        omega.
       - (* BigTheta *)
         pose proof HAB H1 as [[? ?] ?].
         pose proof H.
@@ -290,5 +320,5 @@ Proof.
           }
           omega.
     }
-Admitted. (* The most complicated branches of BigTheta have been proven *)
+Qed.
 (** [] *)
