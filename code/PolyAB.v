@@ -92,16 +92,16 @@ Definition ab_eval (La : Lassn) (T : AsymptoticBound) (a1 a2 N t : Z) : Prop :=
   | BigO p n => La n >= N ->
                 0 <= t <= a2 * (poly_eval p (La n))
   | BigOmega p n => La n >= N ->
-                    a1 * (poly_eval p (La n)) <= t
+                    0 <= a1 * (poly_eval p (La n)) <= t
   | BigTheta p n => La n >= N ->
-                    a1 * (poly_eval p (La n)) <= t <= a2 * (poly_eval p (La n))
+                    0 <= a1 * (poly_eval p (La n)) <= t /\ t <= a2 * (poly_eval p (La n))
   end.
 
 Reserved Notation "T1 '=<' T2" (at level 50, no associativity).
 
 Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
   | Theta2Omega : forall p n, BigTheta p n =< BigOmega p n
-  | Theta2O : forall p n, highest_nonneg p -> BigTheta p n =< BigO p n
+  | Theta2O : forall p n, BigTheta p n =< BigO p n
   | HighestEquivTheta : forall p1 p2 n,
                       length (trim_0_l p1) = length (trim_0_l p2) ->
                       BigTheta p1 n =< BigTheta p2 n
@@ -113,19 +113,20 @@ Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
 (* TODO: prove loosening correctness *)
 Theorem loosen_valid :
   forall T1 T2, T1 =< T2 ->
-  (exists (a1 a2 N : Z), forall La t, ab_eval La T1 a1 a2 N t) ->
-  exists (a1' a2' N' : Z), forall La t, ab_eval La T2 a1' a2' N' t.
+  (exists (a1 a2 N : Z), a1 > 0 -> a2 > 0 -> N > 0 ->
+    forall La t, ab_eval La T1 a1 a2 N t) ->
+  exists (a1' a2' N' : Z), a1' > 0 -> a2' > 0 -> N' > 0 ->
+    forall La t, ab_eval La T2 a1' a2' N' t.
 Proof.
   intros. revert H0.
-  induction H; intros [a1 [a2 [N ?]]].
-  - simpl in *.
-    exists a1, a2, N.
-    intros.
-    pose proof H La t H0. omega.
-  - simpl in *.
-    exists a1, a2, N.
-    intros.
-    Admitted. (* how to use nonnegtivity *)
+  induction H; intros [a1 [a2 [N ?]]]; simpl in *;
+  try (exists a1, a2, N;
+      intros;
+      pose proof H H0 H1 H2 La t H3; omega).
+  (* Prove the polynomial asymptotic bounds are equivalent when the highest orders are the same *)
+  - (* HighestEquivTheta *)
+    simpl in *.
+  Admitted.
 
 
 End Polynomial_Asympotitic_Bound.
