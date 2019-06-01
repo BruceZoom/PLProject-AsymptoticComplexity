@@ -59,12 +59,39 @@ Fixpoint trim_0_l (p : poly) : poly :=
   | h :: t => if Z.eq_dec h 0 then trim_0_l t else h :: t
   end.
 
+Theorem trim_invar:
+  forall p n,
+  poly_eval (trim_0_l p) n = poly_eval p n.
+Proof.
+  intros p.
+  induction p.
+  - intros. simpl. reflexivity.
+  - intros.
+    simpl. destruct (Z.eq_dec a 0) eqn:eq.
+    + pose proof IHp n.
+      rewrite H. rewrite e.
+      simpl. reflexivity.
+    + simpl. reflexivity.
+Qed.
+
 Definition highest_nonneg (p : poly) : Prop :=
   match trim_0_l p with
   | nil => True
   | h :: t => h >= 0
   end.
 (** [] *)
+
+Definition highest_coef (p : poly) : Z :=
+  match p with 
+  | nil => 0
+  | h :: t => h
+  end.
+  
+Definition highest_out (p : poly) : poly :=
+match p with 
+| nil => nil
+| h :: t => t
+end.
 
 Example poly_add_eg : poly_eval (poly_add (1::1::nil) (1::0::1::nil)) 2 = 8.
 Proof.
@@ -113,13 +140,24 @@ Proof.
     apply rev_involutive.
 Qed.
 
+Fact poly_highest_seg : forall p,
+  poly_add ((highest_coef p)::nil (* a list with (length p) - 1 *) ) (highest_out p) = p.
+  (* FILL *)
+Abort.
+
 Lemma poly_add_eval_comm : forall p1 p2 z,
   poly_eval (poly_add p1 p2) z = poly_eval p1 z + poly_eval p2 z.
 Proof.
   intro p1.
   induction p1; intros.
   - simpl. rewrite poly_add_empty_l. reflexivity.
-  - (* TODO: FILL IN HERE *) Admitted.
+  - simpl. pose proof IHp1 p2 z.
+    assert (a * z ^ Z.of_nat (Datatypes.length p1) + poly_eval p1 z + poly_eval p2 z =
+    a * z ^ Z.of_nat (Datatypes.length p1) + poly_eval (poly_add p1 p2) z).
+    { omega. }
+    rewrite H0. clear H0.
+    
+  (* TODO: FILL IN HERE *) Admitted.
 (** [] *)
 
 End Polynomial.
