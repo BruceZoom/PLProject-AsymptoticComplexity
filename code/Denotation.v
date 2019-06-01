@@ -3,7 +3,7 @@ Require Import AB.Imp8.
 
 (* ################################################################# *)
 (** * Review: Denotations *)
-
+(*
 Module Expression_Denotation.
 
 Fixpoint aeval (a : aexp) (st : state) : Z :=
@@ -52,10 +52,10 @@ Definition omega_union {A B: Type} (rs: nat -> A -> B -> Prop): A -> B -> Prop :
   fun st1 st2 => exists n, rs n st1 st2.
 
 End Relation_Operators.
-
+*)
 Module Command_Denotation_With_Steps.
 
-Import Expression_Denotation.
+(*Import Expression_Denotation.*)
 
 (** This time, a program's denotation is defined as a trinary relation.
 Specifically, [st1, t, st2] belongs to the denotation of program [c] if and
@@ -68,7 +68,7 @@ Definition skip_sem: state -> Z -> state -> Prop :=
 Definition asgn_sem (X: var) (E: aexp): state -> Z -> state -> Prop :=
   fun st1 t st2 =>
     st2 X = aeval E st1 /\
-    forall Y, X <> Y -> st1 Y = st2 Y /\
+    (forall Y, X <> Y -> st1 Y = st2 Y) /\ (* <-- modified *)
     t = 1.
 
 (** Here we assume every assignment command takes one unit of time. We can

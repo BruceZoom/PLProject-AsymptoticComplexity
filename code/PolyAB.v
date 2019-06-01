@@ -76,6 +76,52 @@ Proof.
   simpl. reflexivity.
 Qed.
 
+(** Properties of Polynomial Operations *)
+Lemma poly_add_body_empty_r : forall l, poly_add_body l nil = l.
+Proof.
+  intros.
+  destruct l.
+  - auto.
+  - simpl. reflexivity.
+Qed.
+
+Lemma poly_add_empty_r : forall p, poly_add p nil = p.
+Proof.
+  intros.
+  destruct p.
+  - auto.
+  - unfold poly_add.
+    rewrite poly_add_body_empty_r.
+    apply rev_involutive.
+Qed.
+
+Lemma poly_add_body_empty_l : forall l, poly_add_body nil l = l.
+Proof.
+  intros.
+  destruct l.
+  - auto.
+  - simpl. reflexivity.
+Qed.
+
+Lemma poly_add_empty_l : forall p, poly_add nil p = p.
+Proof.
+  intros.
+  destruct p.
+  - auto.
+  - unfold poly_add.
+    rewrite poly_add_body_empty_l.
+    apply rev_involutive.
+Qed.
+
+Lemma poly_add_eval_comm : forall p1 p2 z,
+  poly_eval (poly_add p1 p2) z = poly_eval p1 z + poly_eval p2 z.
+Proof.
+  intro p1.
+  induction p1; intros.
+  - simpl. rewrite poly_add_empty_l. reflexivity.
+  - (* TODO: FILL IN HERE *) Admitted.
+(** [] *)
+
 End Polynomial.
 
 Module Polynomial_Asympotitic_Bound.
@@ -89,11 +135,11 @@ Inductive AsymptoticBound : Type :=
 
 Definition ab_eval (La : Lassn) (T : AsymptoticBound) (a1 a2 N t : Z) : Prop :=
   match T with
-  | BigO p n => La n >= N ->
+  | BigO p n => N <= La n ->
                 0 <= t <= a2 * (poly_eval p (La n))
-  | BigOmega p n => La n >= N ->
+  | BigOmega p n => N <= La n ->
                     0 <= a1 * (poly_eval p (La n)) <= t
-  | BigTheta p n => La n >= N ->
+  | BigTheta p n => N <= La n ->
                     0 <= a1 * (poly_eval p (La n)) <= t /\ t <= a2 * (poly_eval p (La n))
   end.
 
@@ -113,9 +159,9 @@ Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
 (* TODO: prove loosening correctness *)
 Theorem loosen_valid :
   forall T1 T2, T1 =< T2 ->
-  (exists (a1 a2 N : Z), a1 > 0 -> a2 > 0 -> N > 0 ->
+  (exists (a1 a2 N : Z), a1 < 0 -> a2 < 0 -> N < 0 ->
     forall La t, ab_eval La T1 a1 a2 N t) ->
-  exists (a1' a2' N' : Z), a1' > 0 -> a2' > 0 -> N' > 0 ->
+  exists (a1' a2' N' : Z), a1' < 0 -> a2' < 0 -> N' < 0 ->
     forall La t, ab_eval La T2 a1' a2' N' t.
 Proof.
   intros. revert H0.
