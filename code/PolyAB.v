@@ -81,18 +81,6 @@ Definition highest_nonneg (p : poly) : Prop :=
   end.
 (** [] *)
 
-Definition highest_coef (p : poly) : Z :=
-  match p with 
-  | nil => 0
-  | h :: t => h
-  end.
-  
-Definition highest_out (p : poly) : poly :=
-match p with 
-| nil => nil
-| h :: t => t
-end.
-
 Example poly_add_eg : poly_eval (poly_add (1::1::nil) (1::0::1::nil)) 2 = 8.
 Proof.
   simpl. reflexivity.
@@ -140,10 +128,63 @@ Proof.
     apply rev_involutive.
 Qed.
 
-Fact poly_highest_seg : forall p,
-  poly_add ((highest_coef p)::nil (* a list with (length p) - 1 *) ) (highest_out p) = p.
-  (* FILL *)
-Abort.
+Fact poly_eval_0s: forall times n,
+  poly_eval (repeat 0 times) n = 0.
+Proof.
+  intros.
+  induction times.
+  - simpl. reflexivity.
+  - simpl. omega.
+Qed.
+
+Fact poly_cons_eval_comm : forall p z n,
+  poly_eval (cons z p) n = poly_eval (cons z (repeat 0 (length p))) n + poly_eval p n.
+Proof.
+  intros.
+  simpl.
+  assert (Datatypes.length (repeat 0 (Datatypes.length p)) = Datatypes.length p).
+  { induction p.
+    - simpl. reflexivity.
+    - simpl. rewrite IHp. reflexivity.
+  }
+  rewrite H.
+  pose proof poly_eval_0s (Datatypes.length p) n.
+  rewrite H0.
+  omega.
+Qed.
+
+Fact poly_app_eval_comm: forall p1 p2 n,
+  poly_eval (p1 ++ p2) n = poly_eval (p1 ++ (repeat 0 (length p2))) n + poly_eval p2 n.
+Proof.
+  intros.
+  induction p1.
+  - simpl. Search (nil ++ _).
+    pose proof app_nil_l p2.
+    rewrite <- H. simpl.
+    pose proof poly_eval_0s (Datatypes.length p2) n.
+    rewrite H0.
+    omega.
+  - pose proof poly_cons_eval_comm.
+    simpl.
+    assert (Datatypes.length (p1 ++ repeat 0 (Datatypes.length p2)) = Datatypes.length (p1 ++ p2)).
+    { clear IHp1 H.
+      Search (length (_ ++ _)).
+      assert (Datatypes.length (repeat 0%Z (Datatypes.length p2)) = Datatypes.length p2).
+      { induction p2.
+        - simpl. reflexivity.
+        - simpl. rewrite IHp2. reflexivity.
+      }
+      pose proof app_length p1 p2.
+      rewrite H0. 
+      pose proof app_length p1 (repeat 0 (Datatypes.length p2)).
+      rewrite H1.
+      rewrite H.
+      omega.
+    }
+    rewrite H0.
+    rewrite IHp1. 
+    omega.
+Qed.
 
 Lemma poly_add_eval_comm : forall p1 p2 z,
   poly_eval (poly_add p1 p2) z = poly_eval p1 z + poly_eval p2 z.
