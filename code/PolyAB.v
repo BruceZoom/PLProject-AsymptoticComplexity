@@ -159,9 +159,9 @@ Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
 (* TODO: prove loosening correctness *)
 Theorem loosen_valid :
   forall T1 T2, T1 =< T2 ->
-  (exists (a1 a2 N : Z), a1 < 0 -> a2 < 0 -> N < 0 ->
+  (exists (a1 a2 N : Z), 0 < a1 -> 0 < a2 -> 0 < N ->
     forall La t, ab_eval La T1 a1 a2 N t) ->
-  exists (a1' a2' N' : Z), a1' < 0 -> a2' < 0 -> N' < 0 ->
+  exists (a1' a2' N' : Z), 0 < a1' -> 0 < a2' -> 0 < N' ->
     forall La t, ab_eval La T2 a1' a2' N' t.
 Proof.
   intros. revert H0.
