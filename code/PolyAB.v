@@ -128,7 +128,7 @@ Proof.
     apply rev_involutive.
 Qed.
 
-Fact poly_eval_0s: forall times n,
+Lemma poly_eval_0s: forall times n,
   poly_eval (repeat 0 times) n = 0.
 Proof.
   intros.
@@ -137,7 +137,7 @@ Proof.
   - simpl. omega.
 Qed.
 
-Fact poly_cons_eval_comm : forall p z n,
+Lemma poly_cons_eval_comm : forall p z n,
   poly_eval (cons z p) n = poly_eval (cons z (repeat 0 (length p))) n + poly_eval p n.
 Proof.
   intros.
@@ -153,7 +153,7 @@ Proof.
   omega.
 Qed.
 
-Fact poly_app_eval_comm: forall p1 p2 n,
+Lemma poly_app_eval_comm: forall p1 p2 n,
   poly_eval (p1 ++ p2) n = poly_eval (p1 ++ (repeat 0 (length p2))) n + poly_eval p2 n.
 Proof.
   intros.
@@ -182,47 +182,119 @@ Proof.
       omega.
     }
     rewrite H0.
-    rewrite IHp1. 
+    rewrite IHp1.
     omega.
 Qed.
 
-Fact repeat_p_length: forall (p : poly),
-  length (repeat 0 (length p)) = length p.
-Proof.
-  intros.
-  induction p.
-  - simpl. reflexivity.
-  - simpl. rewrite IHp. reflexivity.
-Qed.
-
-Fact poly_eval_repeat_length_p: forall a (p : poly) z,
+Lemma poly_eval_repeat_length_p: forall a (p : poly) z,
   poly_eval (a :: repeat 0 (length p)) z = a * z ^ (Z.of_nat (length p)).
 Proof.
   intros.
   simpl.
   pose proof poly_eval_0s (length p) z.
   rewrite H.
-  pose proof repeat_p_length p.
+  pose proof repeat_length 0 (length p).
   rewrite H0.
   omega.
 Qed.
 
-Print poly_add_body. 
-
-Fact poly_add_body_comm: forall p1 p2,
+Lemma poly_add_body_comm: forall p1 p2,
   poly_add_body p1 p2 = poly_add_body p2 p1.
 Proof.
-  intros. 
-  induction p2.
+  intro.
+  induction p1; intros.
   - rewrite poly_add_body_empty_l.
     rewrite poly_add_body_empty_r.
     reflexivity.
-  - simpl.
-    
-  
-  
+  - induction p2.
+    + rewrite poly_add_body_empty_l.
+      rewrite poly_add_body_empty_r.
+      reflexivity.
+    + simpl.
+      rewrite IHp1.
+      rewrite Z.add_comm.
+      reflexivity.
+Qed.
+
+Lemma poly_add_comm : forall p1 p2,
+  poly_add p1 p2 = poly_add p2 p1.
+Proof.
+  intros.
+  unfold poly_add.
+  rewrite poly_add_body_comm.
+  reflexivity.
+Qed.
+
+Lemma poly_add_body_cons_split : forall a p,
+  p ++ a :: nil = poly_add_body p ((repeat 0 (length p)) ++ a :: nil).
+Proof.
+  intros. revert a.
+  induction p; intros.
+  - simpl. reflexivity.
+  - simpl. rewrite <- IHp. rewrite Z.add_0_r. reflexivity.
+Qed.
+
+Lemma repeat_head_tail : forall (z : Z) n, z :: repeat z n = repeat z n ++ z :: nil.
+Proof.
+  intros.
+  induction n.
+  - auto.
+  - simpl. rewrite IHn. reflexivity.
+Qed.
+
+Lemma rev_repeat : forall (z : Z) n, rev (repeat z n) = repeat z n.
+Proof.
+  intros.
+  induction n.
+  - auto.
+  - simpl. rewrite IHn. rewrite repeat_head_tail. reflexivity.
+Qed.
+
+Lemma poly_add_body_same_level_tail : forall p1 p2 a1 a2,
+  length p1 = length p2 ->
+  poly_add_body (p1 ++ a1 :: nil) (p2 ++ a2 :: nil) = poly_add_body p1 p2 ++ (a1 + a2) :: nil.
+Proof.
+Admitted.
+
+Lemma poly_add_cons_split : forall a p,
+  a::p = poly_add (a :: (repeat 0 (length p))) p.
+Proof.
+  intros. revert a.
+  induction p; intros.
+  - simpl. rewrite poly_add_empty_r. reflexivity.
+  - unfold poly_add in *. simpl in *. rewrite rev_repeat in *.
+Admitted.
+
+Lemma poly_add_assoc : forall p1 p2 p3,
+  poly_add (poly_add p1 p2) p3 = poly_add p1 (poly_add p2 p3).
+Admitted.
+
+Lemma zero_poly : forall n z, poly_eval (repeat 0 n) z = 0.
+Proof.
+Admitted.
+
+Lemma extract_single_term : forall a p z n, poly_eval (poly_add (a :: repeat 0 n) p) z = a * z ^ Z.of_nat n + poly_eval p z.
+Proof.
+  intros.
+  revert a. revert n.
+  induction p; intros.
+  - rewrite poly_add_empty_r. simpl. rewrite zero_poly, repeat_length. reflexivity.
+  - Admitted.
+
 Lemma poly_add_eval_comm : forall p1 p2 z,
   poly_eval (poly_add p1 p2) z = poly_eval p1 z + poly_eval p2 z.
+(*Proof.
+  intro.
+  induction p1; intros.
+  - simpl. rewrite poly_add_empty_l. reflexivity.
+  - rewrite poly_add_cons_split.
+    assert (poly_add (a :: repeat 0 (Datatypes.length p1)) p1 = poly_add p1 (a :: repeat 0 (Datatypes.length p1))). rewrite poly_add_comm. auto.
+    rewrite H; clear H. rewrite poly_add_assoc, IHp1, IHp1.
+    rewrite <- Z.add_assoc. f_equal.
+    (*remember (a :: repeat 0 (Datatypes.length p1)) as p0.*)
+    induction p2.
+    + rewrite poly_add_empty_r. simpl. omega.
+    + rewrite poly_add_cons_split. *)
 (** Proof.
   intro p1.
   induction p1; intros.
@@ -236,32 +308,28 @@ Lemma poly_add_eval_comm : forall p1 p2 z,
     simpl in H0.
 **)
 Proof.
-  intros.
-  induction p1.
+  intros. revert p2.
+  induction p1; intros.
   - simpl. rewrite poly_add_empty_l. reflexivity.
-  - simpl. 
-    assert (a * z ^ Z.of_nat (Datatypes.length p1) + poly_eval p1 z + poly_eval p2 z = 
-            a * z ^ Z.of_nat (Datatypes.length p1) + poly_eval (poly_add p1 p2) z).
-    { rewrite IHp1. omega. }
-    rewrite H. clear H.
+  - simpl.
+    rewrite <- Z.add_assoc.
+    rewrite <- IHp1.
+    rewrite poly_add_cons_split, poly_add_assoc.
+    remember (poly_add p1 p2) as p3.
+    clear Heqp3.
+    remember (Datatypes.length p1) as n.
+    clear Heqn.
+    revert a.
+    induction n; intros.
+    + simpl.
+    (*
     pose proof poly_cons_eval_comm p1 a z.
     pose proof poly_eval_repeat_length_p a p1 z.
     rewrite <- H0.
-     
+    *)
     
-  (* TODO: FILL IN HERE *) Admitted.
+  (* TODO: FILL IN HERE *) Abort.
 (** [] *)
-
-Fact poly_add_comm: forall p1 p2 n,
-  poly_eval (poly_add p1 p2) n = poly_eval (poly_add p2 p1) n.
-Proof.
-  intros.
-  induction p1.
-  - rewrite poly_add_empty_l. rewrite poly_add_empty_r. reflexivity.
-  - pose proof poly_add_eval_comm (a :: p1) p2 n.
-    pose proof poly_add_eval_comm p2 (a :: p1) n.
-    rewrite H. rewrite H0. omega.
-Qed.
 
 End Polynomial.
 
@@ -313,6 +381,7 @@ Proof.
   (* Prove the polynomial asymptotic bounds are equivalent when the highest orders are the same *)
   - (* HighestEquivTheta *)
     simpl in *.
+    
   Admitted.
 
 
