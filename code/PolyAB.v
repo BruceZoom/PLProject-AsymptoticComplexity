@@ -183,6 +183,8 @@ Definition ab_eval (La : Lassn) (T : AsymptoticBound) (a1 a2 N t : Z) : Prop :=
 
 Reserved Notation "T1 '=<' T2" (at level 50, no associativity).
 
+(** This rule is invalid *)
+(*
 Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
   | Theta2Omega : forall p n, BigTheta p n =< BigOmega p n
   | Theta2O : forall p n, BigTheta p n =< BigO p n
@@ -197,20 +199,20 @@ Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
 (* TODO: prove loosening correctness *)
 Theorem loosen_valid :
   forall T1 T2, T1 =< T2 ->
-  (exists (a1 a2 N : Z), 0 < a1 -> 0 < a2 -> 0 < N ->
-    forall La t, ab_eval La T1 a1 a2 N t) ->
+  forall t, (exists (a1 a2 N : Z), 0 < a1 -> 0 < a2 -> 0 < N ->
+    forall La, ab_eval La T1 a1 a2 N t) ->
   exists (a1' a2' N' : Z), 0 < a1' -> 0 < a2' -> 0 < N' ->
-    forall La t, ab_eval La T2 a1' a2' N' t.
+    forall La, ab_eval La T2 a1' a2' N' t.
 Proof.
   intros. revert H0.
   induction H; intros [a1 [a2 [N ?]]]; simpl in *;
   try (exists a1, a2, N;
       intros;
-      pose proof H H0 H1 H2 La t H3; omega).
+      pose proof H H0 H1 H2 La H3; omega).
   (* Prove the polynomial asymptotic bounds are equivalent when the highest orders are the same *)
   - (* HighestEquivTheta *)
     simpl in *.
   Admitted.
-
+*)
 
 End Polynomial_Asympotitic_Bound.

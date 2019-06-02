@@ -321,4 +321,62 @@ Proof.
           omega.
     }
 Qed.
+
+Lemma hoare_loosen_sound : forall P Q c T1 T2,
+  T1 =< T2 ->
+  |== {{P}} c {{Q}} $ T1 ->
+  |== {{P}} c {{Q}} $ T2.
+Proof.
+  unfold valid.
+  intros.
+  destruct H0 as [a1 [a2 [N [h1 [h2 [h3 ?]]]]]].
+(*  pose proof loosen_valid _ _ H as Hlv.*)
+  induction H.
+  (* Theta2Omega *)
+  {
+    exists a1, a2, N.
+    intros.
+    split. omega.
+    split. omega.
+    split. omega.
+    intros.
+    specialize (H0 La st1 st2 t H H1).
+    split. tauto.
+    destruct H0 as [_ ?].
+    simpl in *. intros.
+    specialize (H0 H2); clear H2.
+    omega.
+  }
+  (* Theta2O *)
+  {
+    exists a1, a2, N.
+    intros.
+    split. omega.
+    split. omega.
+    split. omega.
+    intros.
+    specialize (H0 La st1 st2 t H H1).
+    split. tauto.
+    destruct H0 as [_ ?].
+    simpl in *. intros.
+    specialize (H0 H2); clear H2.
+    omega.
+  }
+  (* HighestEquivTheta *)
+  {
+    admit.
+  }
+Admitted.
+
+
+
+
+
+
+
+
+
+
+
+
 (** [] *)
