@@ -9,7 +9,7 @@ Export Polynomial_Asympotitic_Bound.
 Inductive hoare_triple: Type :=
 | Build_hoare_triple (P: Assertion) (c: com) (Q: Assertion) (AB : AsymptoticBound).
 
-Notation "{{ P }}  c  {{ Q }} $ T " :=
+Notation "{{ P }}  c  {{ Q }}  $ T " :=
   (Build_hoare_triple P c%imp Q T) (at level 90, c at next level).
 
 Inductive provable {T: FirstOrderLogic}: hoare_triple -> Prop :=
