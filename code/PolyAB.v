@@ -186,9 +186,44 @@ Proof.
     omega.
 Qed.
 
+Fact repeat_p_length: forall (p : poly),
+  length (repeat 0 (length p)) = length p.
+Proof.
+  intros.
+  induction p.
+  - simpl. reflexivity.
+  - simpl. rewrite IHp. reflexivity.
+Qed.
+
+Fact poly_eval_repeat_length_p: forall a (p : poly) z,
+  poly_eval (a :: repeat 0 (length p)) z = a * z ^ (Z.of_nat (length p)).
+Proof.
+  intros.
+  simpl.
+  pose proof poly_eval_0s (length p) z.
+  rewrite H.
+  pose proof repeat_p_length p.
+  rewrite H0.
+  omega.
+Qed.
+
+Print poly_add_body. 
+
+Fact poly_add_body_comm: forall p1 p2,
+  poly_add_body p1 p2 = poly_add_body p2 p1.
+Proof.
+  intros. 
+  induction p2.
+  - rewrite poly_add_body_empty_l.
+    rewrite poly_add_body_empty_r.
+    reflexivity.
+  - simpl.
+    
+  
+  
 Lemma poly_add_eval_comm : forall p1 p2 z,
   poly_eval (poly_add p1 p2) z = poly_eval p1 z + poly_eval p2 z.
-Proof.
+(** Proof.
   intro p1.
   induction p1; intros.
   - simpl. rewrite poly_add_empty_l. reflexivity.
@@ -197,9 +232,36 @@ Proof.
     a * z ^ Z.of_nat (Datatypes.length p1) + poly_eval (poly_add p1 p2) z).
     { omega. }
     rewrite H0. clear H0.
+    pose proof IHp1 (a::p1) z.
+    simpl in H0.
+**)
+Proof.
+  intros.
+  induction p1.
+  - simpl. rewrite poly_add_empty_l. reflexivity.
+  - simpl. 
+    assert (a * z ^ Z.of_nat (Datatypes.length p1) + poly_eval p1 z + poly_eval p2 z = 
+            a * z ^ Z.of_nat (Datatypes.length p1) + poly_eval (poly_add p1 p2) z).
+    { rewrite IHp1. omega. }
+    rewrite H. clear H.
+    pose proof poly_cons_eval_comm p1 a z.
+    pose proof poly_eval_repeat_length_p a p1 z.
+    rewrite <- H0.
+     
     
   (* TODO: FILL IN HERE *) Admitted.
 (** [] *)
+
+Fact poly_add_comm: forall p1 p2 n,
+  poly_eval (poly_add p1 p2) n = poly_eval (poly_add p2 p1) n.
+Proof.
+  intros.
+  induction p1.
+  - rewrite poly_add_empty_l. rewrite poly_add_empty_r. reflexivity.
+  - pose proof poly_add_eval_comm (a :: p1) p2 n.
+    pose proof poly_add_eval_comm p2 (a :: p1) n.
+    rewrite H. rewrite H0. omega.
+Qed.
 
 End Polynomial.
 
