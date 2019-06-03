@@ -276,6 +276,13 @@ Admitted.
 Lemma extract_single_term : forall a p z n, poly_eval (poly_add (a :: repeat 0 n) p) z = a * z ^ Z.of_nat n + poly_eval p z.
 Proof.
   intros.
+  revert a. revert p.
+  induction n; intros.
+  - simpl. revert a.
+    induction p; intros.
+    + simpl. reflexivity.
+    + simpl.
+  
   revert a. revert n.
   induction p; intros.
   - rewrite poly_add_empty_r. simpl. rewrite zero_poly, repeat_length. reflexivity.
