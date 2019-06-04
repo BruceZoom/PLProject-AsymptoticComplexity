@@ -36,12 +36,12 @@ Our project has following files:
 - __Denotation.v__: the denational semantics with steps, mainly from the course but modified.
 - __HoareLogic.v__: the hoare logic with asymptotic bound, should contain rules and provable definition
 - __Soundness.v__: the proof for the soundness of hoare logic
-- __Example.v__: examples of programs proved (or to be proved) using our hoare logic
+- __Demos.v__: examples of programs proved (or to be proved) using our hoare logic
 - __AsymptoticBound.v__: pure mathematic asymptotic bound definition attempts (abandonded)
 
 ## __Compilation Order__
 Please compile the project in the following order:
-- Imp8.v -> PolyAB.v -> Denotation.v -> HoareLogic.v -> Soundness.v -> Example.v
+- Imp8.v -> PolyAB.v -> Denotation.v -> HoareLogic.v -> Soundness.v -> Demos.v
 
 ## __Definitions__
 ### __Polynomial__ (in PolyAB.v)
