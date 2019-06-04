@@ -183,20 +183,20 @@ Definition ab_eval (La : Lassn) (T : AsymptoticBound) (a1 a2 N t : Z) : Prop :=
 
 Reserved Notation "T1 '=<' T2" (at level 50, no associativity).
 
-(** This rule is invalid *)
-(*
 Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
   | Theta2Omega : forall p n, BigTheta p n =< BigOmega p n
   | Theta2O : forall p n, BigTheta p n =< BigO p n
-  | HighestEquivTheta : forall p1 p2 n,
+  | HighestEquivO : forall p1 p2 n,
                       length (trim_0_l p1) = length (trim_0_l p2) ->
-                      BigTheta p1 n =< BigTheta p2 n
+                      BigO p1 n =< BigO p2 n
   (* TODO: more highest equiv loosenings *)
   (* TODO: other loosenings *)
   
   where "T1 '=<' T2" := (loosen T1 T2).
 
-(* TODO: prove loosening correctness *)
+
+(** This rule is invalid *)
+(*
 Theorem loosen_valid :
   forall T1 T2, T1 =< T2 ->
   forall t, (exists (a1 a2 N : Z), 0 < a1 -> 0 < a2 -> 0 < N ->

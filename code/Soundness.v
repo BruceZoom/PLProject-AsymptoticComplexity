@@ -55,7 +55,15 @@ Lemma Assertion_sub_spec: forall st1 st2 La (P: Assertion) (X: var) (E: aexp'),
   st2 X = aexp'_denote (st1, La) E ->
   (forall Y : var, X <> Y -> st1 Y = st2 Y) ->
   ((st1, La) |== P[ X |-> E]) <-> ((st2, La) |== P).
-(* FILL IN HERE *) Admitted.
+Proof.
+  intros.
+  split.
+  {
+    intros.
+    (* TODO: Fill in here *)
+    admit.
+  }
+Admitted.
 
 Lemma hoare_asgn_bwd_sound : forall P (X: var) (E: aexp) n,
   |== {{ P [ X |-> E] }} X ::= E {{ P }} $ BigTheta (1::nil) n.
@@ -364,19 +372,18 @@ Proof.
   }
   (* HighestEquivTheta *)
   {
+    (* TODO: Fill in here *)
     admit.
   }
 Admitted.
 
+Lemma hoare_while_linear_sound : forall P (b : bexp) (V : term) (n m : logical_var) (C : term) c p,
+  |== {{ P AND {[b]} AND V==n }} c {{P AND V==n-C}} $ BigO p n ->
+  |== {{P AND V==m }} While b Do c EndWhile {{ P AND NOT {[b]} AND V==0 }} $ BigO (poly_mult (1::0::nil) p) m.
+Proof.
+(* TODO: Fill in here *)
+Admitted.
 
-
-
-
-
-
-
-
-
-
-
+Theorem hoare_logic_sound : forall P Q c T,
+  
 (** [] *)
