@@ -1,6 +1,8 @@
 # PL-Project
 The project for programming language course. The main goal of the project is to introduce the concept of asymptotic complexity into the proof system defined by Hoare Logic and based on Denotational Semantics.
 
+___First two sections are almost the same as the proposal, and you may skip to third section directly.___
+
 ## __Project Goals__
 - [x] Define __polynomial__ to support operations and simplifications in asymptotic bounds.
 - [x] Define various __asymptotic bounds__ and __asymptotic notations__ in coq.
@@ -28,6 +30,13 @@ The project for programming language course. The main goal of the project is to 
 - Prove __the correctness and asymptotic complexity for some simple algorithms__ encountered in class using what we will build.
   - [ ] Slow Addition
   - [ ] Min While
+
+## __Constraints__
+There are several constraints that might limit what we can do or simplify what we want to do.
+- We do not consider programs with __control statements__, i.e. _break_ and _continue_. Moreover, we do not wish to alter the potential path of program execution in similar ways, which makes the execution time almost independent with the __distribution of input data__. This cause us unable to verify the asymptotic complexity of algorithms like Quick Sort, but will simplify our definition of what is Asymptotic Complexity.
+- We will use the __the toy language developed in class__ or the adapted version of it, which only contains very fundamental operations and statements. This will limit the scope of programs and algorithms we can take into consideration.
+
+---
 
 ## __Project Overview__
 Our project has following files:
@@ -133,7 +142,11 @@ All the Hoare Rules contain the part we have declared in class, thus we will not
 - hoare_logic_sound (at ___line 361___)
   - Stating that if a Hoare Triple is provable, then it is valid.
 
-## __Constraints__
-There are several constraints that might limit what we can do or simplify what we want to do.
-- We do not consider programs with __control statements__, i.e. _break_ and _continue_. Moreover, we do not wish to alter the potential path of program execution in similar ways, which makes the execution time almost independent with the __distribution of input data__. This cause us unable to verify the asymptotic complexity of algorithms like Quick Sort, but will simplify our definition of what is Asymptotic Complexity.
-- We will use the __the toy language developed in class__ or the adapted version of it, which only contains very fundamental operations and statements. This will limit the scope of programs and algorithms we can take into consideration.
+### __Demos__ (in Demos.v)
+- __slow_addition_correct__ (at ___line 13___)
+  - This example comes from the Exercise 2 of Task 2 in Assignment 2.
+  - We want to prove that its time complexity is $\Theta(m)$.
+- __min_while_correct__ (at ___line 33___)
+  - This example comes from the Exercise 3 of Task 4 in Assignment 2.
+  - We want to prove that its time complexity is $O(\min(a, b))$.
+  - Since we try to prove something that is not a polynomial, a minimum function, using polynomial asymptotic bound, we might get stuck and might change this to something simpler.
