@@ -25,7 +25,7 @@ Notation "|==  Tr" := (valid Tr) (at level 91, no associativity).
 (** Soundness Proof *)
 
 Lemma hoare_skip_sound : forall P n,
-  |== {{P}} Skip {{P}} $ BigTheta (1::nil) n.
+  |== {{P}} Skip {{P}} $ BigTheta CONSTANT n.
 Proof.
   unfold valid.
   exists 1, 1, 1.
@@ -46,8 +46,8 @@ Proof.
   {
     unfold ab_eval.
     intros.
-    remember (La n) as n'.
-    simpl. omega.
+    rewrite CONSTANT_spec.
+    omega.
   }
 Qed.
 
@@ -66,7 +66,7 @@ Proof.
 Admitted.
 
 Lemma hoare_asgn_bwd_sound : forall P (X: var) (E: aexp) n,
-  |== {{ P [ X |-> E] }} X ::= E {{ P }} $ BigTheta (1::nil) n.
+  |== {{ P [ X |-> E] }} X ::= E {{ P }} $ BigTheta CONSTANT n.
 Proof.
   unfold valid.
   exists 1, 1, 1.
@@ -76,7 +76,7 @@ Proof.
   split. omega.
   
   intros.
-  simpl in *.
+  simpl in H0.
   destruct H0, H1.
   split.
   {
@@ -87,6 +87,8 @@ Proof.
   }
   {
     intros.
+    unfold ab_eval.
+    rewrite CONSTANT_spec.
     omega.
   }
 Qed.
@@ -94,7 +96,7 @@ Qed.
 Lemma hoare_seq_bigtheta_sound : forall (P Q R: Assertion) (c1 c2: com) (p1 p2 : poly) (n : logical_var),
   |== {{P}} c1 {{Q}} $ BigTheta p1 n ->
   |== {{Q}} c2 {{R}} $ BigTheta p2 n ->
-  |== {{P}} c1;;c2 {{R}} $ BigTheta (poly_add p1 p2) n.
+  |== {{P}} c1;;c2 {{R}} $ BigTheta (p1 +++ p2) n.
 Proof.
   unfold valid.
   intros.
@@ -138,7 +140,7 @@ Proof.
     assert (0 <= a1 * T2). apply Z.mul_nonneg_nonneg; omega.
     
     split.
-    - rewrite poly_add_eval_comm, Z.mul_add_distr_l.
+    - rewrite poly_add_spec, Z.mul_add_distr_l.
       rewrite <- HeqT1. rewrite <- HeqT2.
       pose proof Z.mul_min_distr_nonneg_r a1 a1' _ H'.
       pose proof Z.mul_min_distr_nonneg_r a1 a1' _ H1'.
@@ -149,7 +151,7 @@ Proof.
       pose proof Z.le_min_l (a1 * T1) (a1' * T1).
       pose proof Z.le_min_r (a1 * T2) (a1' * T2).
       omega.
-    - rewrite poly_add_eval_comm, Z.mul_add_distr_l.
+    - rewrite poly_add_spec, Z.mul_add_distr_l.
       rewrite <- HeqT1. rewrite <- HeqT2.
       pose proof Z.mul_max_distr_nonneg_r a2 a2' _ H'.
       pose proof Z.mul_max_distr_nonneg_r a2 a2' _ H1'.
@@ -379,11 +381,15 @@ Admitted.
 
 Lemma hoare_while_linear_sound : forall P (b : bexp) (V : term) (n m : logical_var) (C : term) c p,
   |== {{ P AND {[b]} AND V==n }} c {{P AND V==n-C}} $ BigO p n ->
-  |== {{P AND V==m }} While b Do c EndWhile {{ P AND NOT {[b]} AND V==0 }} $ BigO (poly_mult (1::0::nil) p) m.
+  |== {{P AND V==m }} While b Do c EndWhile {{ P AND NOT {[b]} AND V==0 }} $ BigO (LINEAR *** p) m.
 Proof.
 (* TODO: Fill in here *)
 Admitted.
 
-Theorem hoare_logic_sound : forall P Q c T,
-  
+Theorem hoare_logic_sound (F: FirstOrderLogic) : forall P Q c T,
+  |-- {{P}} c {{Q}} $ T ->
+  |== {{P}} c {{Q}} $ T.
+Proof.
+(* TODO: Fill in here *)
+Admitted.
 (** [] *)
