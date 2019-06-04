@@ -65,4 +65,32 @@ Fixpoint ceval (c: com): state -> Z -> state -> Prop :=
   | CWhile b c => loop_sem b (ceval c)
   end.
 
+Theorem command_cost_time : forall c st1 st2 t,
+  ceval c st1 t st2 -> 0 < t.
+Proof.
+  intro.
+  induction c; intros; simpl in H.
+  - unfold skip_sem in H. omega.
+  - unfold asgn_sem in H. omega.
+  - unfold seq_sem in H.
+    destruct H as [t1 [t2 [st3 [? [? ?]]]]].
+    specialize (IHc1 st1 st3 t1 H).
+    specialize (IHc2 st3 st2 t2 H0).
+    omega.
+  - unfold if_sem in H.
+    destruct H as [[? ?] | [? ?]].
+    + specialize (IHc1 st1 st2 (t-1) H). omega.
+    + specialize (IHc2 st1 st2 (t-1) H). omega.
+  - unfold loop_sem in H. destruct H as [n ?].
+    generalize dependent t. revert st2. revert st1.
+    induction n; intros.
+    + simpl in H. omega.
+    + simpl in H.
+      destruct H.
+      destruct H as [t1 [t2 [st3 [? [? ?]]]]].
+      specialize (IHn _ _ _ H1).
+      specialize (IHc _ _ _ H).
+      omega.
+Qed.
+
 End Command_Denotation_With_Steps.
