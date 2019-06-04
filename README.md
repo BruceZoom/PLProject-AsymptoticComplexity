@@ -1,4 +1,4 @@
-# PL-Project
+# PL-Project: Asymptotic Complexity
 The project for programming language course. The main goal of the project is to introduce the concept of asymptotic complexity into the proof system defined by Hoare Logic and based on Denotational Semantics.
 
 ___First two sections are almost the same as the proposal, and you may skip to third section directly.___
