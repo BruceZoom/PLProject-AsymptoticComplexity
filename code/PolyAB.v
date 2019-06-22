@@ -312,6 +312,17 @@ Proof.
 Qed.
 (** [] *)
 
+Fixpoint poly_pick_highest_coef (p : poly) : Z :=
+  match p with
+  | nil => 0
+  | h::t => (poly_pick_highest_coef t)
+  end. 
+  
+(* Comparation of values of poly_eval *)
+Inductive poly_all_coef_lt (p1 p2: poly)
+
+Fact poly_lt_if_all_coef_lt: forall (p1 p2: poly)
+
 End Polynomial.
 
 Module Polynomial_Asympotitic_Bound.
@@ -339,7 +350,7 @@ Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
   | Theta2Omega : forall p n, BigTheta p n =< BigOmega p n
   | Theta2O : forall p n, BigTheta p n =< BigO p n
   | HighestEquivO : forall p1 p2 n,
-                      length (trim_0 p1) = length (trim_0 p2) ->
+                      length p1 = length p2 ->
                       BigO p1 n =< BigO p2 n
   (* TODO: more highest equiv loosenings *)
   (* TODO: other loosenings *)

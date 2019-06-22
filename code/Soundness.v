@@ -1,6 +1,7 @@
 Require Import AB.Imp8.
 Require Import AB.Denotation.
 Require Import AB.HoareLogic.
+Require Import Coq.Lists.List.
 
 Open Scope list_scope.
 
@@ -347,10 +348,10 @@ Proof.
   (* HighestEquivTheta *)
   {
     (* TODO: Fill in here *)
-    admit.
+    
   }
 Admitted.
-
+    
 Lemma hoare_while_linear_sound : forall P (b : bexp) (V : term) (n m : logical_var) (C : term) c p,
   |== {{ P AND {[b]} AND V==n }} c {{P AND V==n-C}} $ BigO p n ->
   |== {{P AND V==m }} While b Do c EndWhile {{ P AND NOT {[b]} AND V==0 }} $ BigO (LINEAR *** p) m.
