@@ -14,11 +14,11 @@ Import Hoare_Logic.
 Definition valid (Tr: hoare_triple): Prop :=
   match Tr with
   | Build_hoare_triple P c Q T =>
-      exists a1 a2 N, 0 < a1 /\ 0 < a2 /\ 0 < N /\
+      exists a1 a2, 0 < a1 /\ 0 < a2 /\
       forall La st1 st2 t,
         (st1, La) |== P ->
         ceval c st1 t st2 ->
-        ((st2, La) |== Q) /\ ab_eval La T a1 a2 N t
+        ((st2, La) |== Q) /\ ab_eval La T a1 a2 t
   end.
 
 Notation "|==  Tr" := (valid Tr) (at level 91, no associativity).
@@ -29,9 +29,8 @@ Lemma hoare_skip_sound : forall P n,
   |== {{P}} Skip {{P}} $ BigTheta CONSTANT n.
 Proof.
   unfold valid.
-  exists 1, 1, 1.
+  exists 1, 1.
   
-  split. omega.
   split. omega.
   split. omega.
   
@@ -57,22 +56,14 @@ Lemma Assertion_sub_spec: forall st1 st2 La (P: Assertion) (X: var) (E: aexp'),
   (forall Y : var, X <> Y -> st1 Y = st2 Y) ->
   ((st1, La) |== P[ X |-> E]) <-> ((st2, La) |== P).
 Proof.
-  intros.
-  split.
-  {
-    intros.
-    (* TODO: Fill in here *)
-    admit.
-  }
 Admitted.
 
 Lemma hoare_asgn_bwd_sound : forall P (X: var) (E: aexp) n,
   |== {{ P [ X |-> E] }} X ::= E {{ P }} $ BigTheta CONSTANT n.
 Proof.
   unfold valid.
-  exists 1, 1, 1.
+  exists 1, 1.
   
-  split. omega.
   split. omega.
   split. omega.
   
@@ -101,14 +92,13 @@ Lemma hoare_seq_bigtheta_sound : forall (P Q R: Assertion) (c1 c2: com) (p1 p2 :
 Proof.
   unfold valid.
   intros.
-  destruct H as [a1 [a2 [N [h1 [h2 [h3 ?]]]]]].
-  destruct H0 as [a1' [a2' [N' [h1' [h2' [h3' ?]]]]]].
+  destruct H as [a1 [a2 [h1 [h2 ?]]]].
+  destruct H0 as [a1' [a2' [h1' [h2' ?]]]].
   simpl in *.
-  exists (Z.min a1 a1'), (Z.max a2 a2'), (Z.max N N').
+  exists (Z.min a1 a1'), (Z.max a2 a2').
   
   split. apply (Z.min_glb_lt _ _ _ h1 h1').
   split. pose proof Z.le_max_l a2 a2'. omega.
-  split. pose proof Z.le_max_l N N'. omega.
   
   intros.
   unfold seq_sem in H2.
@@ -121,11 +111,16 @@ Proof.
   }
   {
     intros.
+    (*
     pose proof Z.max_lub_l _ _ _ H7;
     pose proof Z.max_lub_r _ _ _ H7;
     clear H7.
     specialize (H5 H8); clear H8.
     specialize (H6 H9); clear H9.
+    *)
+    specialize (H5 H7);
+    specialize (H6 H7);
+    clear H7.
     clear H1 H2 H3 H H0.
     destruct H5, H6.
     remember H4 as H5; clear HeqH5 H4.
@@ -164,6 +159,7 @@ Proof.
   }
 Qed.
 
+(* TODO: fix if to fit new AB *)
 Lemma hoare_if_same_sound : forall P Q (b: bexp) c1 c2 T,
   |== {{ P AND {[b]} }} c1 {{ Q }} $ T ->
   |== {{ P AND NOT {[b]} }} c2 {{ Q }} $ T ->
@@ -351,12 +347,219 @@ Proof.
     
   }
 Admitted.
-    
-Lemma hoare_while_linear_sound : forall P (b : bexp) (V : term) (n m : logical_var) (C : term) c p,
-  |== {{ P AND {[b]} AND V==n }} c {{P AND V==n-C}} $ BigO p n ->
-  |== {{P AND V==m }} While b Do c EndWhile {{ P AND NOT {[b]} AND V==0 }} $ BigO (LINEAR *** p) m.
+
+Print aexp.
+Print term.
+Print bexp.
+Print Assertion.
+
+Lemma nat_plus_eqO : forall (x y : nat),
+  plus x y = 0%nat ->
+  x = 0%nat /\ y = 0%nat.
 Proof.
-(* TODO: Fill in here *)
+  intros.
+  destruct x, y; auto; try inversion H.
+Qed.
+
+Lemma update_lassn_diff : forall La x y z,
+  x <> y ->
+  La x = (Lassn_update La y z) x.
+Proof.
+  intros.
+  unfold Lassn_update.
+  destruct (Nat.eq_dec y x); [congruence | auto].
+Qed.
+
+Lemma update_lassn_sep_term : forall La st V n z,
+  term_occur n V = O ->
+  term_denote (st, La) V = term_denote (st, (Lassn_update La n z)) V.
+Proof.
+  intros.
+  induction V; intros; auto; try inversion H.
+  - destruct (Nat.eq_dec n x).
+    + congruence.
+    + simpl. apply update_lassn_diff. auto.
+  - simpl.
+    admit.
+  - simpl.
+    apply nat_plus_eqO in H1.
+    destruct H1.
+    rewrite (IHV1 H0).
+    rewrite (IHV2 H1).
+    reflexivity.
+  - simpl.
+    apply nat_plus_eqO in H1.
+    destruct H1.
+    rewrite (IHV1 H0).
+    rewrite (IHV2 H1).
+    reflexivity.
+  - simpl.
+    apply nat_plus_eqO in H1.
+    destruct H1.
+    rewrite (IHV1 H0).
+    rewrite (IHV2 H1).
+    reflexivity.
+  Admitted.
+
+Lemma update_lassn_sep_aexp : forall La st a n z,
+  aexp_occur n a = O ->
+  aexp'_denote (st, La) a = aexp'_denote (st, (Lassn_update La n z)) a.
+Proof.
+  intros.
+  induction a; auto; try inversion H.
+  - induction t.
+    + simpl. reflexivity.
+    + simpl in *. unfold Lassn_update.
+      destruct (Nat.eq_dec n x); [congruence | auto].
+    + simpl in *.
+    Admitted.
+
+Lemma update_lassn_sep_bexp : forall La st b n z,
+  bexp_occur n b = O ->
+  bexp'_denote (st, La) b = bexp'_denote (st, (Lassn_update La n z)) b.
+Proof.
+  intros.
+  induction b; auto.
+  - simpl. inversion H.
+  Admitted.
+
+Lemma update_lassn_sep_assn : forall La st n z P,
+  assn_occur n P = O ->
+  (st, La) |== P <-> (st, (Lassn_update La n z)) |== P.
+Proof.
+  intros.
+  Admitted.
+
+Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (m : logical_var) (n : logical_var) (C : Z) c p,
+  {[b]} |-- (0 < V)%assert ->
+  assn_occur n P = O ->
+  term_occur n V = O ->
+  bexp_occur n b = O ->
+  (forall x y, x <= y -> poly_eval p x <= poly_eval p y) ->
+  |== {{P AND {[b]} AND V == n}} c {{P AND V == n-1}} $ BigO p n ->
+  |== {{P AND V == n }} While b Do c EndWhile {{ P AND NOT {[b]} }} $ BigO (LINEAR *** p) n.
+Proof.
+  intros.
+  rename H0 into Hao.
+  rename H1 into Hto.
+  rename H2 into Hbo.
+  rename H3 into Hinc.
+  rename H4 into H0.
+  unfold valid in *.
+  destruct H0 as [a1 [a2 [N [h1 [h2 [h3 ?]]]]]].
+  simpl in H0.
+  exists a1, a2, N.
+  
+  split; auto.
+  split; auto.
+  split; auto.
+  
+  intros.
+  simpl in H1, H2.
+  destruct H1 as [? ?].
+  unfold loop_sem in H2.
+  destruct H2 as [n' ?].
+  
+  generalize dependent st1.
+  revert La t.
+(*  generalize dependent m.*)
+  induction n'; intros.
+  - simpl in H2.
+    destruct H2 as [[? ?] ?].
+    split.
+    + simpl.
+      subst st2 t.
+      pose proof beval_bexp'_denote st1 La b.
+      tauto.
+    + subst st2 t.
+      unfold ab_eval.
+      intros. admit. (* We have a problem here! Nothing specify any property about p. *)
+  - simpl in H2.
+    destruct H2 as [[t1 [t2 [st3 [? [? ?]]]]] ?].
+
+    assert (0 < La n) as Hn.
+    {
+      unfold derives in H.
+      simpl in H.
+      unfold FOL_provable in H.
+      admit.
+    }
+
+    pose proof beval_bexp'_denote st1 La b.
+    assert ((((st1, La) |== P) /\ bexp'_denote (st1, La) b) /\ term_denote (st1, La) V = La n). tauto.
+    (*pose proof H0 La st1 st3 t1 H8 H2.*)
+    pose proof H0 La st1 st3 t1 H8 H2; clear H8.
+    destruct H9 as [[? ?] ?].
+    
+    assert (Lassn_update La n (La n - 1) n = La n - 1) as Hupn.
+    {
+      unfold Lassn_update.
+      destruct (Nat.eq_dec n n); [auto | congruence].
+    }
+    
+    assert (term_denote (st3, Lassn_update La n (La n - 1)) V = Lassn_update La n (La n - 1) n).
+    {
+      pose proof update_lassn_sep_term La st3 V n (La n - 1) Hto.
+      rewrite <- H11. rewrite H9.
+      rewrite Hupn. reflexivity.
+    }
+    assert ((st3, Lassn_update La n (La n - 1)) |== P).
+    {
+      pose proof update_lassn_sep_assn La st3 n (La n - 1) P Hao.
+      rewrite H12 in H8.
+      exact H8.
+    }
+    pose proof IHn' (Lassn_update La n (La n - 1)) t2 st3 H12 H11 H4; clear H11 H12.
+    destruct H13.
+    split.
+    + destruct H11.
+      pose proof update_lassn_sep_assn La st2 n (La n - 1) P Hao.
+      rewrite <- H14 in H11; clear H14.
+      pose proof update_lassn_sep_assn La st2 n (La n - 1) (NOT {[b]}).
+      split. exact H11.
+      rewrite H14. exact H13.
+      simpl. exact Hbo.
+    + clear H1 H3 H2 H4 H6 H7 H8 H9 H11.
+      unfold ab_eval in H12.
+      unfold ab_eval. rewrite Hupn in *.
+      intros.
+      
+      assert (N <= La n - 1). admit.
+      specialize (H10 H1); clear H1.
+      specialize (H12 H2); clear H2.
+      rewrite H5.
+      
+      split.
+      omega.
+      rewrite poly_mult_spec, LINEAR_spec in H12.
+      rewrite poly_mult_spec, LINEAR_spec.
+      assert ((La n - 1) <= (La n)). omega.
+      pose proof Hinc (La n - 1) (La n) H1.
+      assert (t2 <= a2 * ((La n - 1) * poly_eval p (La n))).
+      {
+        assert ((La n - 1) * poly_eval p (La n - 1) <= (La n - 1) * poly_eval p (La n)).
+        {
+          assert (0 <= La n - 1). omega.
+          apply Z.mul_le_mono_nonneg_l.
+          exact H3. exact H2.
+        }
+        eapply Z.le_trans.
+        2:{
+          apply Z.mul_le_mono_nonneg_l. omega.
+          apply H3.
+        }
+        omega.
+      }
+      destruct H10.
+      pose proof Z.add_le_mono _ _ _ _ H6 H3.
+      rewrite Z.mul_assoc.
+      rewrite Z.mul_assoc in H7.
+      assert (La n = 1 + (La n - 1)). omega.
+      rewrite H8 at 1; clear H8.
+      rewrite Z.mul_add_distr_l.
+      rewrite Z.mul_add_distr_r.
+      rewrite Z.mul_1_r.
+      exact H7.
 Admitted.
 
 Theorem hoare_logic_sound (F: FirstOrderLogic) : forall P Q c T,
