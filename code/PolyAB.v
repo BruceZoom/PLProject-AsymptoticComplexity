@@ -312,10 +312,391 @@ Proof.
 Qed.
 (** [] *)
 
+(* Dealing with the coef *)
+Fixpoint poly_coef_sum (p : poly) : Z :=
+  match p with
+  | nil => 0
+  | h::t => h + (poly_coef_sum t)
+  end.
+
 End Polynomial.
+
+Module Polynomial'.
+Export Polynomial.
+Import Assertion_D.
+
+Definition poly' := list Z. (* The power decreases as the index goes up *)
+
+(** Evaluations of polynomial' *)
+Fixpoint poly'_eval (p : poly') : Z -> Z :=
+  fun z =>
+    match p with
+    | nil => 0
+    | h :: t => h * (Z.pow z (Z.of_nat (length t))) + (poly'_eval t z)
+    end.
+
+(** Operations of polynomial *)
+Fixpoint poly'_add_body (l1 l2 : list Z) : list Z :=
+  match l1, l2 with
+  | nil, nil => l2
+  | h::t, nil => h::t
+  | nil, h::t => h::t
+  | h::t, h'::t' => (h+h')::(poly'_add_body t t')
+  end.
+
+Definition poly'_add (p1 p2 : poly') : poly' := rev (poly'_add_body (rev p1) (rev p2)).
+
+(** Properties of Polynomial Operations *)
+Lemma poly'_add_body_empty_r : forall l, poly'_add_body l nil = l.
+Proof.
+  intros.
+  destruct l.
+  - auto.
+  - simpl. reflexivity.
+Qed.
+
+Lemma poly'_add_empty_r : forall p, poly'_add p nil = p.
+Proof.
+  intros.
+  destruct p.
+  - auto.
+  - unfold poly'_add.
+    rewrite poly'_add_body_empty_r.
+    apply rev_involutive.
+Qed.
+
+Lemma poly'_add_body_empty_l : forall l, poly'_add_body nil l = l.
+Proof.
+  intros.
+  destruct l.
+  - auto.
+  - simpl. reflexivity.
+Qed.
+
+Lemma poly'_add_empty_l : forall p, poly'_add nil p = p.
+Proof.
+  intros.
+  destruct p.
+  - auto.
+  - unfold poly'_add.
+    rewrite poly'_add_body_empty_l.
+    apply rev_involutive.
+Qed.
+
+Lemma poly'_eval_0s: forall times n,
+  poly'_eval (repeat 0 times) n = 0.
+Proof.
+  intros.
+  induction times.
+  - simpl. reflexivity.
+  - simpl. omega.
+Qed.
+
+Lemma poly'_cons_eval_comm : forall p z n,
+  poly'_eval (cons z p) n = poly'_eval (cons z (repeat 0 (length p))) n + poly'_eval p n.
+Proof.
+  intros.
+  simpl.
+  assert (Datatypes.length (repeat 0 (Datatypes.length p)) = Datatypes.length p).
+  { induction p.
+    - simpl. reflexivity.
+    - simpl. rewrite IHp. reflexivity.
+  }
+  rewrite H.
+  pose proof poly'_eval_0s (Datatypes.length p) n.
+  rewrite H0.
+  omega.
+Qed.
+
+Lemma poly'_app_eval_comm: forall p1 p2 n,
+  poly'_eval (p1 ++ p2) n = poly'_eval (p1 ++ (repeat 0 (length p2))) n + poly'_eval p2 n.
+Proof.
+  intros.
+  induction p1.
+  - simpl.
+    pose proof app_nil_l p2.
+    rewrite <- H. simpl.
+    pose proof poly'_eval_0s (Datatypes.length p2) n.
+    rewrite H0.
+    omega.
+  - pose proof poly'_cons_eval_comm.
+    simpl.
+    assert (Datatypes.length (p1 ++ repeat 0 (Datatypes.length p2)) = Datatypes.length (p1 ++ p2)).
+    { clear IHp1 H.
+      Search (length (_ ++ _)).
+      assert (Datatypes.length (repeat 0%Z (Datatypes.length p2)) = Datatypes.length p2).
+      { induction p2.
+        - simpl. reflexivity.
+        - simpl. rewrite IHp2. reflexivity.
+      }
+      pose proof app_length p1 p2.
+      rewrite H0. 
+      pose proof app_length p1 (repeat 0 (Datatypes.length p2)).
+      rewrite H1.
+      rewrite H.
+      omega.
+    }
+    rewrite H0.
+    rewrite IHp1.
+    omega.
+Qed.
+
+Lemma poly'_eval_repeat_length_p: forall a (p : poly') z,
+  poly'_eval (a :: repeat 0 (length p)) z = a * z ^ (Z.of_nat (length p)).
+Proof.
+  intros.
+  simpl.
+  pose proof poly'_eval_0s (length p) z.
+  rewrite H.
+  pose proof repeat_length 0 (length p).
+  rewrite H0.
+  omega.
+Qed.
+
+Theorem poly'_eval_poly_eval: forall (p : poly') n,
+  poly'_eval p n = poly_eval (rev p) n.
+Proof.
+  intros.
+  induction p.
+  - simpl. reflexivity.
+  - simpl. 
+    pose proof poly_eval_app (rev p) (a::nil) n.
+    rewrite H. simpl. clear H.
+    rewrite IHp.
+    pose proof rev_length p.
+    rewrite H.
+    assert (a + n * 0 = a). { omega. }
+    rewrite H0.
+    rewrite Z.mul_comm.
+    omega.
+Qed.
+
+Theorem poly_eval_poly'_eval: forall (p : poly) n,
+  poly_eval p n = poly'_eval (rev p) n.
+Proof.
+  intros.
+  pose proof poly'_eval_poly_eval (rev p) n.
+  rewrite rev_involutive in H.
+  omega.
+Qed.
+
+End Polynomial'.
+
+Module Monomial.
+Export Polynomial.
+Export Polynomial'.
+
+Fixpoint poly_get_last (p : poly) : Z := 
+  match p with
+  | nil => 0
+  | a::nil => a
+  | h::t => poly_get_last t
+  end.
+
+Fact poly_app_nonnil: forall (p : poly) a, (p ++ a::nil) <> nil.
+Proof.
+  intros. unfold not. intros.
+  induction p.
+  - inversion H; subst.
+  - inversion H; subst.
+Qed.
+
+Fact poly_get_last_app: forall (p : poly) a,
+  poly_get_last (p ++ a::nil) = a.
+Proof.
+  intros.
+  induction p.
+  - simpl. reflexivity.
+  - pose proof poly_app_nonnil p a.
+    simpl. 
+    destruct (p ++ a ::nil).
+    + unfold not in H. assert ((nil:poly) = (nil:poly)). { reflexivity. }
+      pose proof H H0. destruct H1.
+    + tauto.
+Qed.
+
+
+Fixpoint poly'_get_first (p : poly) : Z := 
+  match p with
+  | nil => 0
+  | h::t => h
+  end.
+
+Definition poly_monomialize (p : poly) : poly :=
+  match p with
+  | nil => nil
+  | _ :: _ => (repeat 0 ((length p) - 1)) ++ (poly_get_last p)::nil
+  end.
+
+Definition poly'_monomialize (p : poly') : poly' := 
+  match p with
+  | nil => nil
+  | h :: _ => h::nil ++ (repeat 0 ((length p) - 1))
+  end.
+
+Example poly_mono_1: poly_monomialize (3::2::1::nil) = 0::0::1::nil.
+Proof.
+  simpl. reflexivity.
+Qed.
+
+Example poly'_mono_1: poly'_monomialize (1::2::3::nil) = 1::0::0::nil.
+Proof.
+  simpl. reflexivity.
+Qed.
+
+Lemma poly'_eval_mono: forall (p : poly') (n : Z),
+  poly'_eval (poly'_monomialize p) n = (poly'_get_first p) * n^(Z.of_nat (length p) - 1).
+Proof.
+  intros.
+  induction p.
+  - simpl. reflexivity.
+  - assert (Datatypes.length p - 0 = Datatypes.length p)%nat.
+    { omega. }
+    assert (poly'_eval (poly'_monomialize (a :: p)) n = a * n ^ Z.of_nat (Datatypes.length (repeat 0 (Datatypes.length p - 0))) + poly'_eval (repeat 0 (Datatypes.length p - 0)) n).
+    { simpl. reflexivity. }
+    rewrite H0. clear H0.
+    rewrite H.
+    assert (Datatypes.length (repeat 0 (Datatypes.length p)) = Datatypes.length p).
+    { clear IHp H.
+      induction p.
+      - simpl. reflexivity.
+      - simpl. rewrite IHp. reflexivity.
+    }
+    rewrite H0.
+    pose proof poly'_eval_0s (Datatypes.length p) n.
+    rewrite H1.
+    assert (poly'_get_first (a :: p) = a).
+    { simpl. reflexivity. }
+    rewrite H2.
+    assert (Z.of_nat (Datatypes.length (a :: p)) - 1 = Z.of_nat (Datatypes.length p)).
+    { assert (Datatypes.length (a :: p) = Datatypes.length p + 1)%nat.
+      { simpl. omega. }
+      rewrite H3.
+      rewrite Nat2Z.inj_add.
+      simpl. omega.
+    }
+    rewrite H3.
+    omega.
+Qed.
+
+Lemma poly_mono_app_1 : forall (p : poly) a,
+  poly_monomialize (p ++ a::nil) = (repeat 0 (length p)) ++ a::nil.
+Proof.
+  intros.
+  pose proof poly_app_nonnil p a.
+  pose proof poly_get_last_app p a.
+  assert (length (p ++ a::nil) = length p + 1)%nat.
+  { clear H H0.
+    induction p.
+    - simpl. reflexivity.
+    - simpl. rewrite IHp. reflexivity.
+  }
+  unfold poly_monomialize. destruct (p ++ a::nil).
+  { unfold not in H. assert ((nil:poly) = (nil:poly)). { reflexivity. }
+    pose proof H H2. destruct H3.
+  }
+  { rewrite H0. rewrite H1.
+    assert (Datatypes.length p + 1 - 1 = Datatypes.length p)%nat.
+    { omega. }
+    rewrite H2.
+    reflexivity.
+  }
+Qed.
+
+Lemma poly'_mono_poly_mono : forall (p : poly') n,
+  poly_eval (poly_monomialize (rev p)) n = poly'_eval (poly'_monomialize p) n.
+Proof.
+  intros.
+  induction p.
+  - simpl. reflexivity.
+  - simpl.
+    assert (Datatypes.length p - 0 = Datatypes.length p)%nat.
+    { omega. }
+    rewrite H.
+    assert (Datatypes.length (repeat 0 (Datatypes.length p)) = Datatypes.length p).
+    { clear IHp H.
+      induction p.
+      - simpl. reflexivity.
+      - simpl. rewrite IHp. reflexivity.
+    }
+    rewrite H0.
+    pose proof poly'_eval_0s (Datatypes.length p) n.
+    rewrite H1.
+    pose proof poly_mono_app_1 (rev p) a.
+    rewrite H2.
+    rewrite rev_length.
+    { clear IHp H H0 H1 H2.
+      induction p.
+      - simpl. omega.
+      - simpl. rewrite IHp. 
+        assert (n * (a * n ^ Z.of_nat (Datatypes.length p) + 0) = a * n * n ^ Z.of_nat (Datatypes.length p)).
+        { simpl. ring. }
+        rewrite H.
+        pose proof Z.pow_1_r n. rewrite <- H0 at 1. clear H0.
+        pose proof Z.pow_add_r n 1 (Z.of_nat (Datatypes.length p)).
+        assert (0 <= 1). { omega. }
+        assert ( 0 <= Z.of_nat (Datatypes.length p)). { omega. }
+        pose proof H0 H1 H2.
+        assert (a * n ^ 1 * n ^ Z.of_nat (Datatypes.length p) = a * n ^ (1 + Z.of_nat (Datatypes.length p))).
+        { rewrite H3. rewrite Z.mul_assoc. reflexivity. }
+        rewrite H4. clear H4.
+        pose proof Zpos_P_of_succ_nat (Datatypes.length p).
+        rewrite Z.pow_pos_fold.
+        rewrite H4.
+        assert (1 + Z.of_nat (Datatypes.length p) = Z.succ (Z.of_nat (Datatypes.length p))).
+        { rewrite <- Z.add_1_r.
+          rewrite Z.add_comm.
+          reflexivity.
+        }
+        rewrite H5.
+        omega.
+    }
+Qed.
+
+Lemma poly_mono_poly'_mono : forall (p : poly) n,
+  poly_eval (poly_monomialize p) n = poly'_eval (poly'_monomialize (rev p)) n.
+Proof.
+  intros.
+  pose proof poly'_mono_poly_mono (rev p) n.
+  rewrite rev_involutive in H.
+  tauto.
+Qed.
+
+Lemma poly'_last_poly_first: forall (p : poly'),
+  poly_get_last (rev p) = poly'_get_first p.
+Proof.
+  intros. induction p.
+  - simpl. reflexivity.
+  - simpl. pose proof poly_get_last_app (rev p) a.
+    tauto.
+Qed.
+
+Lemma poly_last_poly'_first: forall (p : poly),
+  poly_get_last p = poly'_get_first (rev p).
+Proof.
+  intros. pose proof poly'_last_poly_first (rev p).
+  rewrite rev_involutive in H.
+  tauto.
+Qed.
+
+Lemma poly_eval_mono: forall (p : poly) (n : Z),
+  poly_eval (poly_monomialize p) n = (poly_get_last p) * n^(Z.of_nat (length p) - 1).
+Proof.
+  intros.
+  pose proof poly_mono_poly'_mono p n. 
+  rewrite H.
+  pose proof poly_last_poly'_first p.
+  rewrite H0.
+  rewrite <- rev_length.
+  pose proof poly'_eval_mono (rev p) n.
+  tauto.
+Qed.
+
+End Monomial.
 
 Module Polynomial_Asympotitic_Bound.
 Export Polynomial.
+Export Monomial.
 Import Assertion_D.
 
 Inductive AsymptoticBound : Type :=
@@ -336,14 +717,18 @@ Definition ab_eval (La : Lassn) (T : AsymptoticBound) (a1 a2 t : Z) : Prop :=
 Reserved Notation "T1 '=<' T2" (at level 50, no associativity).
 
 Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
-  | Theta2Omega : forall p n, BigTheta p n =< BigOmega p n
-  | Theta2O : forall p n, BigTheta p n =< BigO p n
-  | HighestEquivO : forall p1 p2 n,
-                      length (trim_0 p1) = length (trim_0 p2) ->
-                      BigO p1 n =< BigO p2 n
+  | Theta2Omega : forall p n, poly_get_last p > 0 -> BigTheta p n =< BigOmega p n
+  | Theta2O : forall p n, poly_get_last p > 0 -> BigTheta p n =< BigO p n
+  (* | HighestEquivO : forall p1 p2 n,
+                      0 < poly_coef_sum p1 ->
+                      0 < poly_coef_sum p2 ->
+                      length p1 = length p2 ->
+                      BigO p1 n =< BigO p2 n*)
+  | O_Poly2Mono : forall p n, poly_get_last p > 0 -> BigO p n =< BigO (poly_monomialize p) n
   (* TODO: more highest equiv loosenings *)
   (* TODO: other loosenings *)
   
   where "T1 '=<' T2" := (loosen T1 T2).
+  
 
 End Polynomial_Asympotitic_Bound.

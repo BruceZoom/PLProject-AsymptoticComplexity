@@ -1,6 +1,7 @@
 Require Import AB.Imp8.
 Require Import AB.Denotation.
 Require Import AB.HoareLogic.
+Require Import Coq.Lists.List.
 
 Open Scope list_scope.
 
@@ -300,43 +301,51 @@ Lemma hoare_loosen_sound : forall P Q c T1 T2,
 Proof.
   unfold valid.
   intros.
-  destruct H0 as [a1 [a2 [N [h1 [h2 [h3 ?]]]]]].
+  destruct H0 as [a1 [a2 [h1 [h2 ?]]]].
 (*  pose proof loosen_valid _ _ H as Hlv.*)
   induction H.
   (* Theta2Omega *)
   {
-    exists a1, a2, N.
+    exists a1, a2.
     intros.
     split. omega.
     split. omega.
-    split. omega.
     intros.
-    specialize (H0 La st1 st2 t H H1).
+    specialize (H0 La st1 st2 t H1 H2).
     split. tauto.
     destruct H0 as [_ ?].
     simpl in *. intros.
-    specialize (H0 H2); clear H2.
+    specialize (H0 H3); clear H2.
     omega.
   }
   (* Theta2O *)
   {
-    exists a1, a2, N.
+    exists a1, a2.
     intros.
     split. omega.
     split. omega.
-    split. omega.
     intros.
-    specialize (H0 La st1 st2 t H H1).
+    specialize (H0 La st1 st2 t H1 H2).
     split. tauto.
     destruct H0 as [_ ?].
     simpl in *. intros.
-    specialize (H0 H2); clear H2.
+    specialize (H0 H3); clear H2.
     omega.
   }
-  (* HighestEquivTheta *)
+  (* O_Poly2Mono *)
   {
     (* TODO: Fill in here *)
-    admit.
+    exists a1.
+    exists ((poly_get_max p)*(Z.of_nat (length p) + 1)*a2).
+    split. omega.
+    split. assert (a2 > 0) as h2'. { omega. }
+  
+    
+    intros.
+    specialize (H0 La st1 st2 t H3 H4). destruct H0.
+    split.
+    - tauto.
+    - simpl. simpl in H5.
   }
 Admitted.
 
