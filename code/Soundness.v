@@ -166,14 +166,13 @@ Lemma hoare_if_same_sound : forall P Q (b: bexp) c1 c2 T,
 Proof.
   unfold valid.
   intros.
-  destruct H as [a1 [a2 [N [h1 [h2 [h3 ?]]]]]].
-  destruct H0 as [a1' [a2' [N' [h1' [h2' [h3' ?]]]]]].
+  destruct H as [a1 [a2 [h1 [h2 ?]]]].
+  destruct H0 as [a1' [a2' [h1' [h2' ?]]]].
   simpl in *.
-  exists (Z.min a1 a1'), (2 * (Z.max a2 a2')), (Z.max N N').
+  exists (Z.min a1 a1'), (2 * (Z.max a2 a2')).
   
   split. apply (Z.min_glb_lt _ _ _ h1 h1').
   split. pose proof Z.le_max_l a2 a2'. omega.
-  split. pose proof Z.le_max_l N N'. omega.
   
   intros.
   unfold if_sem in H2.
@@ -186,46 +185,43 @@ Proof.
       tauto.
     }
     {
-      assert (ab_eval La T a1 a2 N (t - 1)) as HAB. tauto.
+      assert (ab_eval La T a1 a2 (t - 1)) as HAB. tauto.
       pose proof command_cost_time _ _ _ _ H2 as HT.
       clear H H0 H1 H2 H3 H4 H5.
       destruct T;
       unfold ab_eval in *;
       intros;
-      pose proof Z.max_lub_l _ _ _ H;
-      pose proof Z.max_lub_r _ _ _ H;
-      clear H;
       remember (poly_eval p (La l)) as T.
       - (* BigO *)
-        pose proof HAB H0 as [? ?].
+        pose proof HAB H as [? ?].
         assert (0 <= a2 * T). omega.
-        rewrite (Z.mul_nonneg_cancel_l _ _ h2) in H3.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h2) in H2.
         rewrite <- Z.mul_assoc.
-        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H3).
+        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H2).
         pose proof Z.le_max_l (a2 * T) (a2' * T).
         omega.
       - (* BigOmega *)
-        pose proof HAB H0 as [? ?].
-        pose proof H.
-        rewrite (Z.mul_nonneg_cancel_l _ _ h1) in H3.
-        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H3).
+        pose proof HAB H as [? ?].
+        pose proof H0.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h1) in H2.
+        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H2).
         pose proof Z.le_min_l (a1 * T) (a1' * T).
         assert (0 <= a1' * T). apply Z.mul_nonneg_nonneg; omega.
-        pose proof Z.min_glb _ _ _ H H5.
+        pose proof Z.min_glb _ _ _ H0 H4.
         omega.
       - (* BigTheta *)
-        pose proof HAB H0 as [[? ?] ?].
-        pose proof H.
-        rewrite (Z.mul_nonneg_cancel_l _ _ h1) in H4.
-        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H4).
+        pose proof HAB H as [[? ?] ?].
+        pose proof H0.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h1) in H3.
+        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H3).
         rewrite <- Z.mul_assoc.
-        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H4).
+        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H3).
         assert (0 <= a1' * T). apply Z.mul_nonneg_nonneg; omega.
         assert (0 <= a1 * T). apply Z.mul_nonneg_nonneg; omega.
-        clear H4.
+        clear H3.
         split.
         + pose proof Z.le_min_l (a1 * T) (a1' * T).
-          pose proof Z.min_glb _ _ _ H H5.
+          pose proof Z.min_glb _ _ _ H5 H4.
           omega.
         + pose proof Z.le_max_l (a2 * T) (a2' * T).
           assert (t <= 2 * t - 2).
@@ -246,46 +242,43 @@ Proof.
       tauto.
     }
     {
-      assert (ab_eval La T a1' a2' N' (t - 1)) as HAB. tauto.
+      assert (ab_eval La T a1' a2' (t - 1)) as HAB. tauto.
       pose proof command_cost_time _ _ _ _ H2 as HT.
       clear H H0 H1 H2 H3 H4 H5.
       destruct T;
       unfold ab_eval in *;
       intros;
-      pose proof Z.max_lub_l _ _ _ H;
-      pose proof Z.max_lub_r _ _ _ H;
-      clear H;
       remember (poly_eval p (La l)) as T.
       - (* BigO *)
-        pose proof HAB H1 as [? ?].
+        pose proof HAB H as [? ?].
         assert (0 <= a2' * T). omega.
-        rewrite (Z.mul_nonneg_cancel_l _ _ h2') in H3.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h2') in H2.
         rewrite <- Z.mul_assoc.
-        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H3).
+        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H2).
         pose proof Z.le_max_r (a2 * T) (a2' * T).
         omega.
       - (* BigOmega *)
-        pose proof HAB H1 as [? ?].
-        pose proof H.
-        rewrite (Z.mul_nonneg_cancel_l _ _ h1') in H3.
-        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H3).
+        pose proof HAB H as [? ?].
+        pose proof H0.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h1') in H2.
+        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H2).
         pose proof Z.le_min_r (a1 * T) (a1' * T).
         assert (0 <= a1 * T). apply Z.mul_nonneg_nonneg; omega.
-        pose proof Z.min_glb _ _ _ H5 H.
+        pose proof Z.min_glb _ _ _ H4 H0.
         omega.
       - (* BigTheta *)
-        pose proof HAB H1 as [[? ?] ?].
-        pose proof H.
-        rewrite (Z.mul_nonneg_cancel_l _ _ h1') in H4.
-        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H4).
+        pose proof HAB H as [[? ?] ?].
+        pose proof H0.
+        rewrite (Z.mul_nonneg_cancel_l _ _ h1') in H3.
+        rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H3).
         rewrite <- Z.mul_assoc.
-        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H4).
+        rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H3).
         assert (0 <= a1' * T). apply Z.mul_nonneg_nonneg; omega.
         assert (0 <= a1 * T). apply Z.mul_nonneg_nonneg; omega.
-        clear H4.
+        clear H3.
         split.
         + pose proof Z.le_min_r (a1 * T) (a1' * T).
-          pose proof Z.min_glb _ _ _ H6 H5.
+          pose proof Z.min_glb _ _ _ H5 H4.
           omega.
         + pose proof Z.le_max_r (a2 * T) (a2' * T).
           assert (t <= 2 * t - 2).
@@ -371,15 +364,20 @@ Qed.
 
 Lemma update_lassn_sep_term : forall La st V n z,
   term_occur n V = O ->
-  term_denote (st, La) V = term_denote (st, (Lassn_update La n z)) V.
+  term_denote (st, La) V = term_denote (st, (Lassn_update La n z)) V
+  with update_lassn_sep_aexp : forall La st a n z,
+  aexp_occur n a = O ->
+  aexp'_denote (st, La) a = aexp'_denote (st, (Lassn_update La n z)) a.
 Proof.
+{
   intros.
+  clear update_lassn_sep_term.
   induction V; intros; auto; try inversion H.
   - destruct (Nat.eq_dec n x).
     + congruence.
     + simpl. apply update_lassn_diff. auto.
   - simpl.
-    admit.
+    rewrite <- update_lassn_sep_aexp; auto.
   - simpl.
     apply nat_plus_eqO in H1.
     destruct H1.
@@ -398,7 +396,27 @@ Proof.
     rewrite (IHV1 H0).
     rewrite (IHV2 H1).
     reflexivity.
-  Admitted.
+}
+{
+  intros.
+  clear update_lassn_sep_aexp.
+  induction a; intros; auto; try inversion H.
+  - simpl.
+    rewrite <- update_lassn_sep_term; auto.
+  - simpl.
+    apply nat_plus_eqO in H1 as [? ?].
+    rewrite (IHa1 H0), (IHa2 H1).
+    reflexivity.
+  - simpl.
+    apply nat_plus_eqO in H1 as [? ?].
+    rewrite (IHa1 H0), (IHa2 H1).
+    reflexivity.
+  - simpl.
+    apply nat_plus_eqO in H1 as [? ?].
+    rewrite (IHa1 H0), (IHa2 H1).
+    reflexivity.
+}
+Qed.
 
 Lemma update_lassn_sep_aexp : forall La st a n z,
   aexp_occur n a = O ->
