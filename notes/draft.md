@@ -39,3 +39,8 @@ Q'(n) |- Q(n) ->
 O(g(n)) satisfy T(n) = T(n') + O(f(n)) ->
 {{P(n) AND V(n)}} While b Do c EndWhile {{P(n) AND V(0) AND NOT [[b]]}} O(g(n))
 ```
+
+## Problems with Hoare While Linear
+Not matter what we use, logical_var or Z, in loop body to specify the change of loop variant, there exists following problem:
+- if we put the introduction of $v$ at the most front of the theorem, the property of loop body become too strong to be applied to the second step during induction.
+- if we put the introduction of $v$ in the property of loop body, we are unable to extract any information about a1, a2, N.
