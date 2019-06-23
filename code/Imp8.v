@@ -1413,10 +1413,10 @@ Notation "x == y" := (AssnEq ((x)%term) ((y)%term)) (at level 70, no associativi
 Notation "{[ b ]}" := (AssnDenote ((b)%vimp)) (at level 30, no associativity) : assert_scope.
 Notation "P1 'OR' P2" := (AssnOr P1 P2) (at level 76, left associativity) : assert_scope.
 Notation "P1 'AND' P2" := (AssnAnd P1 P2) (at level 74, left associativity) : assert_scope.
-Notation "P1 'IMPLY' P2" := (AssnImpl P1 P2) (at level 74, left associativity) : assert_scope.
+Notation "P1 'IMPLY' P2" := (AssnImpl P1 P2) (at level 77, right associativity) : assert_scope.
 Notation "'NOT' P" := (AssnNot P) (at level 73, right associativity) : assert_scope.
-Notation "'EXISTS' x ',' P " := (AssnExists x ((P)%assert)) (at level 77,  right associativity) : assert_scope.
-Notation "'FORALL' x ',' P " := (AssnForall x ((P)%assert)) (at level 77, right associativity) : assert_scope.
+Notation "'EXISTS' x ',' P " := (AssnExists x ((P)%assert)) (at level 79,  right associativity) : assert_scope.
+Notation "'FORALL' x ',' P " := (AssnForall x ((P)%assert)) (at level 79, right associativity) : assert_scope.
 
 Fixpoint aexp_rename (x y: logical_var) (a: aexp'): aexp' :=
     match a with
@@ -1732,6 +1732,23 @@ Definition Lassn: Type := logical_var -> Z.
 Definition Lassn_update (La: Lassn) (x: logical_var) (v: Z): Lassn :=
   fun y => if (Nat.eq_dec x y) then v else La y.
 
+Lemma Lassn_update_spec: forall La x v,
+  (Lassn_update La x v) x = v /\
+  (forall y, x <> y -> La y = (Lassn_update La x v) y).
+Proof.
+  intros.
+  unfold Lassn_update.
+  split.
+  + destruct (Nat.eq_dec x x).
+    - reflexivity.
+    - assert (x = x). { reflexivity. }
+      tauto.
+  + intros.
+    destruct (Nat.eq_dec x y).
+    - tauto.
+    - reflexivity.
+Qed.
+
 Definition Interp: Type := state * Lassn.
 
 Definition Interp_Lupdate (J: Interp) (x: logical_var) (v: Z): Interp :=
@@ -1827,6 +1844,40 @@ Record Interp_Equiv (J1 J2: Interp): Prop := {
   Lassn_equiv: forall x: logical_var, snd J1 x = snd J2 x
 }.
 
+Lemma Interp_Equiv_trans: forall J1 J2 J3,
+  Interp_Equiv J1 J2 ->
+  Interp_Equiv J2 J3 ->
+  Interp_Equiv J1 J3.
+Proof.
+  intros.
+  destruct H as [?H ?H].
+  destruct H0 as [?H ?H].
+  constructor.
+  + intros.
+    specialize (H X).
+    specialize (H0 X).
+    rewrite H, H0.
+    reflexivity.
+  + intros.
+    specialize (H1 x).
+    specialize (H2 x).
+    rewrite H1, H2.
+    reflexivity.
+Qed.
+
+Lemma Interp_Equiv_sym: forall J1 J2,
+  Interp_Equiv J1 J2 ->
+  Interp_Equiv J2 J1.
+Proof.
+  intros.
+  destruct H as [?H ?H].
+  constructor.
+  + intros.
+    rewrite H; reflexivity.
+  + intros.
+    rewrite H0; reflexivity.
+Qed.
+
 Lemma Interp_Equiv_Interp_Lupdate: forall J1 J2 x v,
   Interp_Equiv J1 J2 ->
   Interp_Equiv (Interp_Lupdate J1 x v) (Interp_Lupdate J2 x v).
@@ -1846,6 +1897,25 @@ Proof.
     - pose proof Lassn_equiv _ _ H.
       simpl in H0.
       apply H0.
+Qed.
+
+Lemma Lassn_update_update_self: forall st La x,
+  Interp_Equiv
+    (st, Lassn_update La x (La x))
+    (st, La).
+Proof.
+  intros.
+  apply Build_Interp_Equiv.
+  + intros.
+    simpl.
+    reflexivity.
+  + intros.
+    simpl.
+    unfold Lassn_update.
+    destruct (Nat.eq_dec x x0).
+    - subst x0;
+      reflexivity.
+    - reflexivity.
 Qed.
 
 Lemma Lassn_update_update_same: forall st La x v1 v2,
@@ -1886,6 +1956,85 @@ Proof.
     - reflexivity.
     - reflexivity.
     - reflexivity.
+Qed.
+
+Definition state_update (st: state) (X: var) (v: Z): state :=
+  fun Y => if (Nat.eq_dec X Y) then v else st Y.
+
+Lemma state_update_spec: forall st X v,
+  (state_update st X v) X = v /\
+  (forall Y, X <> Y -> st Y = (state_update st X v) Y).
+Proof.
+  intros.
+  unfold state_update.
+  split.
+  + destruct (Nat.eq_dec X X).
+    - reflexivity.
+    - assert (X = X). { reflexivity. }
+      tauto.
+  + intros.
+    destruct (Nat.eq_dec X Y).
+    - tauto.
+    - reflexivity.
+Qed.
+
+Lemma state_update_update_same: forall st La X v1 v2,
+  Interp_Equiv
+    (state_update (state_update st X v1) X v2, La)
+    (state_update st X v2, La).
+Proof.
+  intros.
+  apply Build_Interp_Equiv.
+  + intros.
+    simpl.
+    unfold state_update.
+    destruct (Nat.eq_dec X X0).
+    - reflexivity.
+    - reflexivity.
+  + intros.
+    simpl.
+    reflexivity.
+Qed.
+
+Lemma state_update_update_diff: forall st La X1 X2 v1 v2,
+  X1 <> X2 ->
+  Interp_Equiv
+    (state_update (state_update st X1 v1) X2 v2, La)
+    (state_update (state_update st X2 v2) X1 v1, La).
+Proof.
+  intros.
+  apply Build_Interp_Equiv.
+  + intros.
+    simpl.
+    unfold state_update.
+    destruct (Nat.eq_dec X1 X), (Nat.eq_dec X2 X).
+    - exfalso.
+      apply H; subst; reflexivity.
+    - reflexivity.
+    - reflexivity.
+    - reflexivity.
+  + intros.
+    simpl.
+    reflexivity.
+Qed.
+
+Lemma state_update_update_self: forall st La X,
+  Interp_Equiv
+    (state_update st X (st X), La)
+    (st, La).
+Proof.
+  intros.
+  apply Build_Interp_Equiv.
+  + intros.
+    simpl.
+    unfold state_update.
+    destruct (Nat.eq_dec X X0).
+    - subst X0;
+      reflexivity.
+    - reflexivity.
+  + intros.
+    simpl.
+    reflexivity.
 Qed.
 
 Lemma aexp'_denote_Interp_Equiv: forall J1 J2 a,
@@ -1993,4 +2142,234 @@ Qed.
 
 End Assertion_D.
 
-(* Mon Apr 22 23:15:31 UTC 2019 *)
+Module OneBinRel_FOL.
+
+Definition logical_var: Type := nat.
+
+Inductive term: Type :=
+| TId (v: logical_var): term.
+
+Inductive prop: Type :=
+| PEq (t1 t2: term): prop
+| PRel (t1 t2: term): prop
+| PFalse: prop
+| PImpl (P Q: prop): prop
+| PForall (x: logical_var) (P: prop): prop.
+
+Definition PTrue: prop := PImpl PFalse PFalse.
+Definition PNot (P: prop): prop := PImpl P PFalse.
+Definition PAnd (P Q: prop): prop := PNot (PImpl P (PNot Q)). 
+Definition POr (P Q: prop): prop := PImpl (PNot P) Q. 
+Definition PExists (x: logical_var) (P: prop): prop :=
+  PNot (PForall x (PNot P)).
+
+Bind Scope FOL_scope with prop.
+Delimit Scope FOL_scope with FOL.
+
+Notation "x == y" := (PEq x y) (at level 70, no associativity) : FOL_scope.
+Notation "P1 'OR' P2" := (POr P1 P2) (at level 76, left associativity) : FOL_scope.
+Notation "P1 'AND' P2" := (PAnd P1 P2) (at level 74, left associativity) : FOL_scope.
+Notation "P1 'IMPLY' P2" := (PImpl P1 P2) (at level 77, right associativity) : FOL_scope.
+Notation "'NOT' P" := (PNot P) (at level 73, right associativity) : FOL_scope.
+Notation "'EXISTS' x ',' P " := (PExists x ((P)%FOL)) (at level 79,  right associativity) : FOL_scope.
+Notation "'FORALL' x ',' P " := (PForall x ((P)%FOL)) (at level 79, right associativity) : FOL_scope.
+
+Definition term_rename (x y: logical_var) (t: term) :=
+    match t with
+    | TId x' => 
+        if Nat.eq_dec x x'
+        then TId y
+        else TId x'
+    end.
+
+Fixpoint prop_rename (x y: logical_var) (d: prop): prop :=
+    match d with
+    | PEq t1 t2    => PEq (term_rename x y t1) (term_rename x y t2)
+    | PRel t1 t2   => PRel (term_rename x y t1) (term_rename x y t2)
+    | PImpl P1 P2  => PImpl (prop_rename x y P1) (prop_rename x y P2)
+    | PFalse       => PFalse
+    | PForall x' P => if Nat.eq_dec x x'
+                      then PForall x' P
+                      else PForall x' (prop_rename x y P)
+    end.
+
+Definition term_max_var (t: term): logical_var :=
+    match t with
+    | TId x => x
+    end.
+
+Fixpoint prop_max_var (d: prop): logical_var :=
+    match d with
+    | PEq t1 t2    => max (term_max_var t1) (term_max_var t2)
+    | PRel t1 t2   => max (term_max_var t1) (term_max_var t2)
+    | PFalse       => O
+    | PImpl P1 P2  => max (prop_max_var P1) (prop_max_var P2)
+    | PForall x' P => max x' (prop_max_var P)
+    end.
+
+Definition new_var (P: prop) (t: term): logical_var :=
+  S (max (prop_max_var P) (term_max_var t)).
+
+Definition term_occur (x: logical_var) (t: term): nat :=
+    match t with
+    | TId x' => if Nat.eq_dec x x' then S O else O
+    end.
+
+Fixpoint prop_free_occur (x: logical_var) (d: prop): nat :=
+    match d with
+    | PEq t1 t2    => (term_occur x t1) + (term_occur x t2)
+    | PRel t1 t2   => (term_occur x t1) + (term_occur x t2)
+    | PFalse       => O
+    | PImpl P1 P2  => (prop_free_occur x P1) + (prop_free_occur x P2)
+    | PForall x' P => if Nat.eq_dec x x'
+                      then O
+                      else prop_free_occur x P
+    end.
+
+Fixpoint rename_all (t: term) (d: prop): prop :=
+    match d with
+    | PEq t1 t2   => PEq t1 t2
+    | PRel t1 t2  => PRel t1 t2
+    | PFalse      => PFalse
+    | PImpl P1 P2 => PImpl (rename_all t P1) (rename_all t P2)
+    | PForall x P => match term_occur x t with
+                        | O => PForall x (rename_all t P)
+                        | _ => PForall
+                                 (new_var (rename_all t P) t)
+                                 (prop_rename x
+                                   (new_var (rename_all t P) t)
+                                   (rename_all t P))
+                        end
+    end.
+
+Definition term_sub (x: logical_var) (tx: term) (t: term) :=
+    match t with
+    | TId x' =>
+         if Nat.eq_dec x x'
+         then tx
+         else TId x'
+    end.
+
+Fixpoint naive_sub (x: logical_var) (tx: term) (d: prop): prop :=
+    match d with
+    | PEq t1 t2   => PEq (term_sub x tx t1) (term_sub x tx t2)
+    | PRel t1 t2  => PRel (term_sub x tx t1) (term_sub x tx t2)
+    | PFalse      => PFalse
+    | PImpl P1 P2 => PImpl (naive_sub x tx P1) (naive_sub x tx P2)
+    | PForall x P => PForall x (naive_sub x tx P)
+    end.
+
+Definition prop_sub (x: logical_var) (tx: term) (P: prop): prop :=
+  naive_sub x tx (rename_all tx P).
+
+Notation "P [ x |-> t ]" := (prop_sub x t ((P)%FOL)) (at level 10, x at next level) : FOL_scope.
+
+Inductive provable: prop -> Prop :=
+| PImply_1: forall P Q, provable (P IMPLY (Q IMPLY P))
+| PImply_2: forall P Q R, provable
+   ((P IMPLY Q IMPLY R) IMPLY
+    (P IMPLY Q) IMPLY
+    (P IMPLY R))
+| Modus_ponens: forall P Q,
+    provable (P IMPLY Q) ->
+    provable P ->
+    provable Q
+| PFalse_elim: forall P,
+    provable (PFalse IMPLY P)
+| Excluded_middle: forall P,
+    provable (P OR NOT P)
+| PForall_elim: forall x t P,
+    provable ((FORALL x, P) IMPLY (P [x |-> t]))
+| PForall_intros: forall x P Q,
+    prop_free_occur x P = O ->
+    provable (P IMPLY Q) ->
+    provable (P IMPLY FORALL x, Q).
+
+Notation "|--  P" := (provable P) (at level 91, no associativity): FOL_scope.
+
+(** We can formalize its semantics as follows. First, an interpretation is a
+domain [D], an interpretation [Rel] of the binary relation symbol [PRel] and
+assignments of all logical variables.*)
+
+Inductive Interp: Type :=
+| Build_Interp (D: Type) (Rel: D -> D -> Prop) (La: logical_var -> D) : Interp.
+
+Definition domain_of (J: Interp): Type :=
+  match J with
+  | Build_Interp D _ _ => D
+  end.
+
+Definition Rel_of (J: Interp): domain_of J -> domain_of J -> Prop :=
+  match J as J0 return
+    match J0 with
+    | Build_Interp D Rel La => D
+    end ->
+    match J0 with
+    | Build_Interp D Rel La => D
+    end ->
+    Prop
+  with
+  | Build_Interp D Rel La => Rel
+  end.
+
+Definition Lassn_of (J: Interp): logical_var -> domain_of J :=
+  match J as J0 return
+    logical_var -> 
+    match J0 with
+    | Build_Interp D Rel La => D
+    end
+  with
+  | Build_Interp D Rel La => La
+  end.
+
+Definition Lassn_update {D: Type} (La: logical_var -> D) (x: logical_var) (v: D): logical_var -> D :=
+  fun y => if (Nat.eq_dec x y) then v else La y.
+
+Definition Interp_Lupdate (J: Interp) (x: logical_var): domain_of J -> Interp :=
+  match J with
+  | Build_Interp D Rel La =>
+     fun v => Build_Interp D Rel (Lassn_update La x v)
+  end.
+
+Definition term_denote (J: Interp) (t: term): domain_of J :=
+    match t with
+    | TId x => Lassn_of J x
+    end.
+
+Fixpoint satisfies (J: Interp) (d: prop): Prop :=
+    match d with
+    | PEq t1 t2   => (term_denote J t1 = term_denote J t2)
+    | PRel t1 t2  => Rel_of J (term_denote J t1) (term_denote J t2)
+    | PFalse      => False
+    | PImpl P1 P2 => ~ (satisfies J P1) \/ (satisfies J P2)
+    | PForall x P => forall v, satisfies (Interp_Lupdate J x v) P
+    end.
+
+Notation "J  |==  x" := (satisfies J x) (at level 90, no associativity): FOL_scope.
+
+Local Open Scope FOL_scope.
+
+Definition valid (P: prop): Prop :=
+  forall J: Interp, J |== P.
+
+Notation "|==  P" := (valid P) (at level 91, no associativity): FOL_scope.
+
+Definition sound: Prop :=
+  forall P: prop, |-- P -> |== P.
+
+Definition complete: Prop :=
+  forall P: prop, |== P -> |-- P.
+
+Lemma prop_sub_spec: forall J (P: prop) (x: logical_var) (t: term),
+  J |== P[ x |-> t] <->
+  Interp_Lupdate J x (term_denote J t) |== P.
+Admitted.
+
+Lemma no_occ_satisfies: forall J P x v,
+  prop_free_occur x P = O ->
+  (J |== P <-> Interp_Lupdate J x v |== P).
+Admitted.
+
+End OneBinRel_FOL.
+
+(* Sat May 4 08:46:51 UTC 2019 *)
