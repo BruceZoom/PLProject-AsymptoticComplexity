@@ -293,7 +293,7 @@ Proof.
     }
 Qed.
 
-Lemma hoare_loosen_sound : forall P Q c T1 T2,
+(*Lemma hoare_loosen_sound : forall P Q c T1 T2,
   T1 =< T2 ->
   |== {{P}} c {{Q}} $ T1 ->
   |== {{P}} c {{Q}} $ T2.
@@ -338,7 +338,7 @@ Proof.
     (* TODO: Fill in here *)
     admit.
   }
-Admitted.
+Admitted.*)
 
 Print aexp.
 Print term.
@@ -418,40 +418,65 @@ Proof.
 }
 Qed.
 
-Lemma update_lassn_sep_aexp : forall La st a n z,
-  aexp_occur n a = O ->
-  aexp'_denote (st, La) a = aexp'_denote (st, (Lassn_update La n z)) a.
-Proof.
-  intros.
-  induction a; auto; try inversion H.
-  - induction t.
-    + simpl. reflexivity.
-    + simpl in *. unfold Lassn_update.
-      destruct (Nat.eq_dec n x); [congruence | auto].
-    + simpl in *.
-    Admitted.
-
 Lemma update_lassn_sep_bexp : forall La st b n z,
   bexp_occur n b = O ->
   bexp'_denote (st, La) b = bexp'_denote (st, (Lassn_update La n z)) b.
 Proof.
   intros.
-  induction b; auto.
-  - simpl. inversion H.
-  Admitted.
+  induction b; auto; inversion H.
+  - simpl. apply nat_plus_eqO in H1 as [? ?].
+    rewrite <- (update_lassn_sep_aexp _ _ _ _ _ H0).
+    rewrite <- (update_lassn_sep_aexp _ _ _ _ _ H1).
+    reflexivity.
+  - apply nat_plus_eqO in H1 as [? ?].
+    simpl.
+    rewrite <- (update_lassn_sep_aexp _ _ _ _ _ H0).
+    rewrite <- (update_lassn_sep_aexp _ _ _ _ _ H1).
+    reflexivity.
+  - simpl. rewrite (IHb H1). reflexivity.
+  - simpl. apply nat_plus_eqO in H1 as [? ?].
+    rewrite (IHb1 H0), (IHb2 H1).
+    reflexivity.
+Qed.
 
 Lemma update_lassn_sep_assn : forall La st n z P,
   assn_occur n P = O ->
   (st, La) |== P <-> (st, (Lassn_update La n z)) |== P.
 Proof.
   intros.
-  Admitted.
+  induction P; simpl; try inversion H; split; intros;
+    try (apply nat_plus_eqO in H1 as [? ?]);
+    try (rewrite <- (update_lassn_sep_term _ _ _ _ _ H1);
+      rewrite <- (update_lassn_sep_term _ _ _ _ _ H2);
+      assumption);
+    try (erewrite (update_lassn_sep_term _ _ _ _ _ H1);
+      erewrite (update_lassn_sep_term _ _ _ _ _ H2);
+      apply H0);
+    try (rewrite (IHP1 H1), (IHP2 H2); assumption);
+    try (rewrite <- (IHP1 H1); rewrite <- (IHP2 H2); assumption);
+    try (destruct H0; [left; apply IHP1 | right; apply IHP2];
+      assumption);
+    try (destruct H0; split;
+      [apply IHP1 | apply IHP2];
+      assumption);
+    try (destruct (Nat.eq_dec n x); [inversion H1 |];
+      destruct H0 as [v ?];
+      exists v).
+    - rewrite <- (update_lassn_sep_bexp _ _ _ _ _ H1).
+      assumption.
+    - erewrite (update_lassn_sep_bexp _ _ _ _ _ H1).
+      apply H0.
+    - rewrite <- (IHP H1); assumption.
+    - rewrite (IHP H1); assumption.
+    - Search Interp_Lupdate.
+      Admitted.
 
 Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (m : logical_var) (n : logical_var) (C : Z) c p,
   {[b]} |-- (0 < V)%assert ->
   assn_occur n P = O ->
   term_occur n V = O ->
   bexp_occur n b = O ->
+  (forall x, 0 <= x -> 0 <= poly_eval p x) ->
   (forall x y, x <= y -> poly_eval p x <= poly_eval p y) ->
   |== {{P AND {[b]} AND V == n}} c {{P AND V == n-1}} $ BigO p n ->
   |== {{P AND V == n }} While b Do c EndWhile {{ P AND NOT {[b]} }} $ BigO (LINEAR *** p) n.
@@ -460,14 +485,14 @@ Proof.
   rename H0 into Hao.
   rename H1 into Hto.
   rename H2 into Hbo.
-  rename H3 into Hinc.
-  rename H4 into H0.
+  rename H3 into Hpre.
+  rename H4 into Hinc.
+  rename H5 into H0.
   unfold valid in *.
-  destruct H0 as [a1 [a2 [N [h1 [h2 [h3 ?]]]]]].
+  destruct H0 as [a1 [a2 [h1 [h2 ?]]]].
   simpl in H0.
-  exists a1, a2, N.
+  exists a1, a2.
   
-  split; auto.
   split; auto.
   split; auto.
   
@@ -541,9 +566,9 @@ Proof.
       unfold ab_eval. rewrite Hupn in *.
       intros.
       
-      assert (N <= La n - 1). admit.
       specialize (H10 H1); clear H1.
-      specialize (H12 H2); clear H2.
+      assert (0 <= La n - 1). omega.
+      specialize (H12 H1); clear H1.
       rewrite H5.
       
       split.
