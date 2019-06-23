@@ -434,10 +434,11 @@ Proof.
   Admitted.
 
 Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (m : logical_var) (n : logical_var) (C : Z) c p,
-  {[b]} |-- 0 <= V ->
+  {[b]} |-- (0 < V)%assert ->
   assn_occur n P = O ->
   term_occur n V = O ->
   bexp_occur n b = O ->
+  (forall x y, x <= y -> poly_eval p x <= poly_eval p y) ->
   |== {{P AND {[b]} AND V == n}} c {{P AND V == n-1}} $ BigO p n ->
   |== {{P AND V == n }} While b Do c EndWhile {{ P AND NOT {[b]} }} $ BigO (LINEAR *** p) n.
 Proof.
@@ -445,7 +446,8 @@ Proof.
   rename H0 into Hao.
   rename H1 into Hto.
   rename H2 into Hbo.
-  rename H3 into H0.
+  rename H3 into Hinc.
+  rename H4 into H0.
   unfold valid in *.
   destruct H0 as [a1 [a2 [N [h1 [h2 [h3 ?]]]]]].
   simpl in H0.
@@ -477,6 +479,15 @@ Proof.
       intros. admit. (* We have a problem here! Nothing specify any property about p. *)
   - simpl in H2.
     destruct H2 as [[t1 [t2 [st3 [? [? ?]]]]] ?].
+
+    assert (0 < La n) as Hn.
+    {
+      unfold derives in H.
+      simpl in H.
+      unfold FOL_provable in H.
+      admit.
+    }
+
     pose proof beval_bexp'_denote st1 La b.
     assert ((((st1, La) |== P) /\ bexp'_denote (st1, La) b) /\ term_denote (st1, La) V = La n). tauto.
     (*pose proof H0 La st1 st3 t1 H8 H2.*)
@@ -525,6 +536,33 @@ Proof.
       omega.
       rewrite poly_mult_spec, LINEAR_spec in H12.
       rewrite poly_mult_spec, LINEAR_spec.
+      assert ((La n - 1) <= (La n)). omega.
+      pose proof Hinc (La n - 1) (La n) H1.
+      assert (t2 <= a2 * ((La n - 1) * poly_eval p (La n))).
+      {
+        assert ((La n - 1) * poly_eval p (La n - 1) <= (La n - 1) * poly_eval p (La n)).
+        {
+          assert (0 <= La n - 1). omega.
+          apply Z.mul_le_mono_nonneg_l.
+          exact H3. exact H2.
+        }
+        eapply Z.le_trans.
+        2:{
+          apply Z.mul_le_mono_nonneg_l. omega.
+          apply H3.
+        }
+        omega.
+      }
+      destruct H10.
+      pose proof Z.add_le_mono _ _ _ _ H6 H3.
+      rewrite Z.mul_assoc.
+      rewrite Z.mul_assoc in H7.
+      assert (La n = 1 + (La n - 1)). omega.
+      rewrite H8 at 1; clear H8.
+      rewrite Z.mul_add_distr_l.
+      rewrite Z.mul_add_distr_r.
+      rewrite Z.mul_1_r.
+      exact H7.
 Admitted.
 
 Theorem hoare_logic_sound (F: FirstOrderLogic) : forall P Q c T,
