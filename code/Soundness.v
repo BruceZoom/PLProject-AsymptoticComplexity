@@ -13,11 +13,11 @@ Import Hoare_Logic.
 Definition valid (Tr: hoare_triple): Prop :=
   match Tr with
   | Build_hoare_triple P c Q T =>
-      exists a1 a2 N, 0 < a1 /\ 0 < a2 /\ 0 < N /\
+      exists a1 a2, 0 < a1 /\ 0 < a2 /\
       forall La st1 st2 t,
         (st1, La) |== P ->
         ceval c st1 t st2 ->
-        ((st2, La) |== Q) /\ ab_eval La T a1 a2 N t
+        ((st2, La) |== Q) /\ ab_eval La T a1 a2 t
   end.
 
 Notation "|==  Tr" := (valid Tr) (at level 91, no associativity).
@@ -28,9 +28,8 @@ Lemma hoare_skip_sound : forall P n,
   |== {{P}} Skip {{P}} $ BigTheta CONSTANT n.
 Proof.
   unfold valid.
-  exists 1, 1, 1.
+  exists 1, 1.
   
-  split. omega.
   split. omega.
   split. omega.
   
@@ -56,22 +55,14 @@ Lemma Assertion_sub_spec: forall st1 st2 La (P: Assertion) (X: var) (E: aexp'),
   (forall Y : var, X <> Y -> st1 Y = st2 Y) ->
   ((st1, La) |== P[ X |-> E]) <-> ((st2, La) |== P).
 Proof.
-  intros.
-  split.
-  {
-    intros.
-    (* TODO: Fill in here *)
-    admit.
-  }
 Admitted.
 
 Lemma hoare_asgn_bwd_sound : forall P (X: var) (E: aexp) n,
   |== {{ P [ X |-> E] }} X ::= E {{ P }} $ BigTheta CONSTANT n.
 Proof.
   unfold valid.
-  exists 1, 1, 1.
+  exists 1, 1.
   
-  split. omega.
   split. omega.
   split. omega.
   
@@ -100,14 +91,13 @@ Lemma hoare_seq_bigtheta_sound : forall (P Q R: Assertion) (c1 c2: com) (p1 p2 :
 Proof.
   unfold valid.
   intros.
-  destruct H as [a1 [a2 [N [h1 [h2 [h3 ?]]]]]].
-  destruct H0 as [a1' [a2' [N' [h1' [h2' [h3' ?]]]]]].
+  destruct H as [a1 [a2 [h1 [h2 ?]]]].
+  destruct H0 as [a1' [a2' [h1' [h2' ?]]]].
   simpl in *.
-  exists (Z.min a1 a1'), (Z.max a2 a2'), (Z.max N N').
+  exists (Z.min a1 a1'), (Z.max a2 a2').
   
   split. apply (Z.min_glb_lt _ _ _ h1 h1').
   split. pose proof Z.le_max_l a2 a2'. omega.
-  split. pose proof Z.le_max_l N N'. omega.
   
   intros.
   unfold seq_sem in H2.
@@ -120,11 +110,16 @@ Proof.
   }
   {
     intros.
+    (*
     pose proof Z.max_lub_l _ _ _ H7;
     pose proof Z.max_lub_r _ _ _ H7;
     clear H7.
     specialize (H5 H8); clear H8.
     specialize (H6 H9); clear H9.
+    *)
+    specialize (H5 H7);
+    specialize (H6 H7);
+    clear H7.
     clear H1 H2 H3 H H0.
     destruct H5, H6.
     remember H4 as H5; clear HeqH5 H4.
@@ -163,6 +158,7 @@ Proof.
   }
 Qed.
 
+(* TODO: fix if to fit new AB *)
 Lemma hoare_if_same_sound : forall P Q (b: bexp) c1 c2 T,
   |== {{ P AND {[b]} }} c1 {{ Q }} $ T ->
   |== {{ P AND NOT {[b]} }} c2 {{ Q }} $ T ->
