@@ -336,16 +336,38 @@ Proof.
   {
     (* TODO: Fill in here *)
     exists a1.
-    exists ((poly_get_max p)*(Z.of_nat (length p) + 1)*a2).
+    exists ((poly_get_max p 0)*(Z.of_nat (length p))*a2).
     split. omega.
     split. assert (a2 > 0) as h2'. { omega. }
-  
-    
+    assert (poly_get_max p (poly_get_last p) > 0).
+    { pose proof poly_get_max_spec p (poly_get_last p). 
+      pose proof Z.lt_le_trans _ _ _ H H1. 
+      omega.
+    }
+    assert (Z.of_nat (length p)> 0).
+    { pose proof Nat2Z.is_nonneg (length p).
+      assert (length p <> 0)%nat.
+      { unfold not. intros.
+        apply length_zero_iff_nil in H3.
+        subst. simpl in H. 
+        omega.
+      }
+      omega.
+    }
+    pose proof Zmult_gt_0_compat _ _ H1 H2.
+    pose proof Zmult_gt_0_compat _ _ H3 h2'.
+    omega.
+
     intros.
-    specialize (H0 La st1 st2 t H3 H4). destruct H0.
+    specialize (H0 La st1 st2 t H1 H2). destruct H0.
     split.
     - tauto.
-    - simpl. simpl in H5.
+    - simpl. intros. 
+      simpl in H3. pose proof H3 H4.
+      assert (a2 * poly_eval p (La n) <= poly_get_max p (poly_get_last p) * (Z.of_nat (Datatypes.length p)) * a2 * poly_eval (poly_monomialize p) (La n)).
+      { pose proof poly_eval_mono p (La n).
+        rewrite H6.
+      
   }
 Admitted.
 

@@ -692,6 +692,104 @@ Proof.
   tauto.
 Qed.
 
+Fixpoint poly_get_max (p : poly) (d : Z) : Z := 
+  match p with
+    | nil => d
+    | b::t => poly_get_max t (Z.max b d)
+  end.
+
+Lemma poly_get_max1: forall (p : poly),
+  forall z, z <= poly_get_max p z.
+Proof.
+  induction p; intros.
+  - simpl. reflexivity.
+  - simpl. 
+    specialize (IHp (Z.max a z)).
+    assert (z <= Z.max a z).
+    { apply Z.le_max_r. }
+    pose proof Z.le_trans _ _ _ H IHp.
+    tauto.
+Qed.
+
+Lemma poly_get_max2: forall (p : poly) z1 z2,
+  z1 <= z2 ->
+  poly_get_max p z1 <= poly_get_max p z2.
+Proof.
+  induction p; intros.
+  - simpl. tauto.
+  - simpl.
+    assert ( a <= z1 \/ z1 < a).
+    { omega. }
+    destruct H0.
+    + pose proof Z.max_l _ _ H0.
+      rewrite Z.max_comm in H1.
+      rewrite H1.
+      pose proof Z.le_trans _ _ _ H0 H.
+      pose proof Z.max_l _ _ H2.
+      rewrite Z.max_comm in H3.
+      rewrite H3.
+      specialize (IHp z1 z2).
+      tauto.
+    + apply Z.lt_le_incl in H0.
+      pose proof Z.max_l _ _ H0.
+      rewrite H1.
+      assert ( a <= z2 \/ z2 < a).
+      { omega. }
+      destruct H2.
+      * pose proof Z.max_l _ _ H2.
+        rewrite Z.max_comm in H3.
+        rewrite H3.
+        pose proof IHp a z2 H2.
+        tauto.
+      * apply Z.lt_le_incl in H2.
+        pose proof Z.max_l _ _ H2.
+        rewrite H3.
+        pose proof IHp a a.
+        pose proof Z.le_refl a.
+        tauto.
+Qed.
+
+Lemma poly_get_max3: forall (p : poly),
+  forall z, In z p -> z <= poly_get_max p 0.
+Proof.
+  induction p; intros.
+  - simpl. inversion H.
+  - simpl.
+    assert (z <= 0 \/ z > 0).
+    { omega. }
+    destruct H0.
+    + pose proof poly_get_max1 p 0.
+      pose proof poly_get_max2 p 0 (Z.max a 0).
+      pose proof Z.le_max_r a 0.
+      pose proof H2 H3.
+      pose proof Z.le_trans _ _ _ H0 H1.
+      pose proof Z.le_trans _ _ _ H5 H4.
+      tauto.
+    + inversion H; subst.
+      * pose proof poly_get_max1 p z.
+        pose proof poly_get_max2 p z (Z.max z 0).
+        pose proof Z.le_max_l z 0.
+        pose proof H2 H3.
+        pose proof Z.le_trans _ _ _ H1 H4.
+        tauto.
+      * specialize (IHp z).
+        pose proof IHp H1.
+        pose proof poly_get_max2 p 0 (Z.max a 0).
+        pose proof Z.le_max_r a 0.
+        pose proof H3 H4.
+        pose proof Z.le_trans _ _ _ H2 H5.
+        tauto.
+Qed.
+
+Fact poly_get_last_in_poly:
+  forall p, p <> nil -> In (poly_get_last p) p.
+Proof.
+  intros.
+Admitted.
+  
+Lemma poly_distr_coef_compare: forall a,
+  repeat
+
 End Monomial.
 
 Module Polynomial_Asympotitic_Bound.
@@ -717,14 +815,14 @@ Definition ab_eval (La : Lassn) (T : AsymptoticBound) (a1 a2 t : Z) : Prop :=
 Reserved Notation "T1 '=<' T2" (at level 50, no associativity).
 
 Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
-  | Theta2Omega : forall p n, poly_get_last p > 0 -> BigTheta p n =< BigOmega p n
-  | Theta2O : forall p n, poly_get_last p > 0 -> BigTheta p n =< BigO p n
+  | Theta2Omega : forall p n, 0 < poly_get_last p -> BigTheta p n =< BigOmega p n
+  | Theta2O : forall p n, 0 < poly_get_last p -> BigTheta p n =< BigO p n
   (* | HighestEquivO : forall p1 p2 n,
                       0 < poly_coef_sum p1 ->
                       0 < poly_coef_sum p2 ->
                       length p1 = length p2 ->
                       BigO p1 n =< BigO p2 n*)
-  | O_Poly2Mono : forall p n, poly_get_last p > 0 -> BigO p n =< BigO (poly_monomialize p) n
+  | O_Poly2Mono : forall p n, 0 < poly_get_last p -> BigO p n =< BigO (poly_monomialize p) n
   (* TODO: more highest equiv loosenings *)
   (* TODO: other loosenings *)
   
