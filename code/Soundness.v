@@ -1,4 +1,4 @@
-Require Import AB.Imp8.
+Require Import AB.Imp9.
 Require Import AB.Denotation.
 Require Import AB.HoareLogic.
 Require Import Coq.Lists.List.
@@ -159,7 +159,6 @@ Proof.
   }
 Qed.
 
-(* TODO: fix if to fit new AB *)
 Lemma hoare_if_same_sound : forall P Q (b: bexp) c1 c2 T,
   |== {{ P AND {[b]} }} c1 {{ Q }} $ T ->
   |== {{ P AND NOT {[b]} }} c2 {{ Q }} $ T ->
@@ -180,14 +179,14 @@ Proof.
   destruct H2 as [[? ?] | [? ?]].
   - (* if branch *)
     pose proof beval_bexp'_denote st1 La b.
-    pose proof H La st1 st2 (t-1).
+    pose proof H La st1 st2 t.
     split.
     {
       tauto.
     }
     {
-      assert (ab_eval La T a1 a2 (t - 1)) as HAB. tauto.
-      pose proof command_cost_time _ _ _ _ H2 as HT.
+      assert (ab_eval La T a1 a2 t) as HAB. tauto.
+(*      pose proof command_cost_time _ _ _ _ H2 as HT.*)
       clear H H0 H1 H2 H3 H4 H5.
       destruct T;
       unfold ab_eval in *;
@@ -225,6 +224,7 @@ Proof.
           pose proof Z.min_glb _ _ _ H5 H4.
           omega.
         + pose proof Z.le_max_l (a2 * T) (a2' * T).
+(*
           assert (t <= 2 * t - 2).
           {
             rewrite <- Z.add_diag.
@@ -233,18 +233,19 @@ Proof.
             apply Zplus_le_compat_l.
             omega.
           }
+*)
           omega.
     }
   - (* else branch *)
     pose proof beval_bexp'_denote st1 La b.
-    pose proof H0 La st1 st2 (t-1).
+    pose proof H0 La st1 st2 t.
     split.
     {
       tauto.
     }
     {
-      assert (ab_eval La T a1' a2' (t - 1)) as HAB. tauto.
-      pose proof command_cost_time _ _ _ _ H2 as HT.
+      assert (ab_eval La T a1' a2' t) as HAB. tauto.
+(*      pose proof command_cost_time _ _ _ _ H2 as HT.*)
       clear H H0 H1 H2 H3 H4 H5.
       destruct T;
       unfold ab_eval in *;
@@ -282,6 +283,7 @@ Proof.
           pose proof Z.min_glb _ _ _ H5 H4.
           omega.
         + pose proof Z.le_max_r (a2 * T) (a2' * T).
+(*
           assert (t <= 2 * t - 2).
           {
             rewrite <- Z.add_diag.
@@ -290,11 +292,12 @@ Proof.
             apply Zplus_le_compat_l.
             omega.
           }
+*)
           omega.
     }
 Qed.
 
-Lemma hoare_loosen_sound : forall P Q c T1 T2,
+(*Lemma hoare_loosen_sound : forall P Q c T1 T2,
   T1 =< T2 ->
   |== {{P}} c {{Q}} $ T1 ->
   |== {{P}} c {{Q}} $ T2.
@@ -369,7 +372,7 @@ Proof.
         rewrite H6.
       
   }
-Admitted.
+Admitted.*)
 
 Print aexp.
 Print term.
@@ -449,40 +452,65 @@ Proof.
 }
 Qed.
 
-Lemma update_lassn_sep_aexp : forall La st a n z,
-  aexp_occur n a = O ->
-  aexp'_denote (st, La) a = aexp'_denote (st, (Lassn_update La n z)) a.
-Proof.
-  intros.
-  induction a; auto; try inversion H.
-  - induction t.
-    + simpl. reflexivity.
-    + simpl in *. unfold Lassn_update.
-      destruct (Nat.eq_dec n x); [congruence | auto].
-    + simpl in *.
-    Admitted.
-
 Lemma update_lassn_sep_bexp : forall La st b n z,
   bexp_occur n b = O ->
   bexp'_denote (st, La) b = bexp'_denote (st, (Lassn_update La n z)) b.
 Proof.
   intros.
-  induction b; auto.
-  - simpl. inversion H.
-  Admitted.
+  induction b; auto; inversion H.
+  - simpl. apply nat_plus_eqO in H1 as [? ?].
+    rewrite <- (update_lassn_sep_aexp _ _ _ _ _ H0).
+    rewrite <- (update_lassn_sep_aexp _ _ _ _ _ H1).
+    reflexivity.
+  - apply nat_plus_eqO in H1 as [? ?].
+    simpl.
+    rewrite <- (update_lassn_sep_aexp _ _ _ _ _ H0).
+    rewrite <- (update_lassn_sep_aexp _ _ _ _ _ H1).
+    reflexivity.
+  - simpl. rewrite (IHb H1). reflexivity.
+  - simpl. apply nat_plus_eqO in H1 as [? ?].
+    rewrite (IHb1 H0), (IHb2 H1).
+    reflexivity.
+Qed.
 
 Lemma update_lassn_sep_assn : forall La st n z P,
   assn_occur n P = O ->
   (st, La) |== P <-> (st, (Lassn_update La n z)) |== P.
 Proof.
   intros.
-  Admitted.
+  induction P; simpl; try inversion H; split; intros;
+    try (apply nat_plus_eqO in H1 as [? ?]);
+    try (rewrite <- (update_lassn_sep_term _ _ _ _ _ H1);
+      rewrite <- (update_lassn_sep_term _ _ _ _ _ H2);
+      assumption);
+    try (erewrite (update_lassn_sep_term _ _ _ _ _ H1);
+      erewrite (update_lassn_sep_term _ _ _ _ _ H2);
+      apply H0);
+    try (rewrite (IHP1 H1), (IHP2 H2); assumption);
+    try (rewrite <- (IHP1 H1); rewrite <- (IHP2 H2); assumption);
+    try (destruct H0; [left; apply IHP1 | right; apply IHP2];
+      assumption);
+    try (destruct H0; split;
+      [apply IHP1 | apply IHP2];
+      assumption);
+    try (destruct (Nat.eq_dec n x); [inversion H1 |];
+      destruct H0 as [v ?];
+      exists v).
+    - rewrite <- (update_lassn_sep_bexp _ _ _ _ _ H1).
+      assumption.
+    - erewrite (update_lassn_sep_bexp _ _ _ _ _ H1).
+      apply H0.
+    - rewrite <- (IHP H1); assumption.
+    - rewrite (IHP H1); assumption.
+    - Search Interp_Lupdate.
+      Admitted.
 
-Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (m : logical_var) (n : logical_var) (C : Z) c p,
-  {[b]} |-- (0 < V)%assert ->
+Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (n : logical_var) (C : Z) c p,
+  (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (0 < V))) ->
   assn_occur n P = O ->
   term_occur n V = O ->
   bexp_occur n b = O ->
+  (forall x, 0 <= x -> 0 <= poly_eval p x) ->
   (forall x y, x <= y -> poly_eval p x <= poly_eval p y) ->
   |== {{P AND {[b]} AND V == n}} c {{P AND V == n-1}} $ BigO p n ->
   |== {{P AND V == n }} While b Do c EndWhile {{ P AND NOT {[b]} }} $ BigO (LINEAR *** p) n.
@@ -491,14 +519,14 @@ Proof.
   rename H0 into Hao.
   rename H1 into Hto.
   rename H2 into Hbo.
-  rename H3 into Hinc.
-  rename H4 into H0.
+  rename H3 into Hpre.
+  rename H4 into Hinc.
+  rename H5 into H0.
   unfold valid in *.
-  destruct H0 as [a1 [a2 [N [h1 [h2 [h3 ?]]]]]].
+  destruct H0 as [a1 [a2 [h1 [h2 ?]]]].
   simpl in H0.
-  exists a1, a2, N.
+  exists a1, a2.
   
-  split; auto.
   split; auto.
   split; auto.
   
@@ -521,16 +549,23 @@ Proof.
       tauto.
     + subst st2 t.
       unfold ab_eval.
-      intros. admit. (* We have a problem here! Nothing specify any property about p. *)
+      intros.
+      rewrite poly_mult_spec, LINEAR_spec.
+      pose proof Hpre _ H2.
+      split; [omega |].
+      apply Z.mul_nonneg_nonneg; [omega |].
+      apply Z.mul_nonneg_nonneg; auto.
   - simpl in H2.
     destruct H2 as [[t1 [t2 [st3 [? [? ?]]]]] ?].
 
     assert (0 < La n) as Hn.
     {
-      unfold derives in H.
-      simpl in H.
-      unfold FOL_provable in H.
-      admit.
+      pose proof H st1 La.
+      simpl in H7.
+      rewrite H3 in H7.
+      apply H7.
+      pose proof beval_bexp'_denote st1 La b.
+      tauto.
     }
 
     pose proof beval_bexp'_denote st1 La b.
@@ -572,9 +607,9 @@ Proof.
       unfold ab_eval. rewrite Hupn in *.
       intros.
       
-      assert (N <= La n - 1). admit.
       specialize (H10 H1); clear H1.
-      specialize (H12 H2); clear H2.
+      assert (0 <= La n - 1). omega.
+      specialize (H12 H1); clear H1.
       rewrite H5.
       
       split.
@@ -608,7 +643,46 @@ Proof.
       rewrite Z.mul_add_distr_r.
       rewrite Z.mul_1_r.
       exact H7.
-Admitted.
+Qed.
+
+Definition FOL_valid {T: FirstOrderLogic} (P: Assertion): Prop :=
+  forall J: Interp, J |== P.
+
+Definition FOL_sound (T: FirstOrderLogic): Prop :=
+  forall P: Assertion, FOL_provable P -> FOL_valid P.
+
+Theorem hoare_consequence_sound (F: FirstOrderLogic) : forall (P P' Q Q' : Assertion) c (T : AsymptoticBound),
+      FOL_sound F ->
+      P |-- P' ->
+      |== {{P'}} c {{Q'}} $ T ->
+      Q' |-- Q ->
+      |== {{P}} c {{Q}} $ T.
+Proof.
+  intros.
+  unfold FOL_sound in H.
+  unfold derives in H0, H2.
+  apply H in H0.
+  apply H in H2.
+  unfold FOL_valid in H0, H2.
+  simpl in H0, H2.
+  unfold valid in H1.
+  unfold valid.
+  
+  destruct H1 as [a1 [a2 [h1 [h2 ?]]]].
+  exists a1, a2.
+  split; auto.
+  split; auto.
+  
+  intros.
+  assert ((st1, La) |== P').
+  {
+    specialize (H0 (st1, La)).
+    tauto.
+  }
+  pose proof H1 _ _ _ t H5 H4.
+  specialize (H2 (st2, La)).
+  tauto.
+Qed.
 
 Theorem hoare_logic_sound (F: FirstOrderLogic) : forall P Q c T,
   |-- {{P}} c {{Q}} $ T ->
