@@ -2,6 +2,7 @@ Require Import Coq.Lists.List.
 Require Import AB.Imp8.
 
 Module Command_Denotation_With_Steps.
+Import Assertion_D.
 
 (* Here we assume that every command will cost time, more specifically, SKIP command should take 1 time steps instead of 0. *)
 
@@ -28,8 +29,8 @@ Definition if_sem (b: bexp) (d1 d2: state -> Z -> state -> Prop)
   : state -> Z -> state -> Prop
 :=
   fun st1 t st2 =>
-    (d1 st1 (t - 1) st2 /\ beval b st1) \/
-    (d2 st1 (t - 1) st2 /\ ~beval b st1).
+    (d1 st1 t st2 /\ beval b st1) \/
+    (d2 st1 t st2 /\ ~beval b st1).
 
 Fixpoint iter_loop_body
   (b: bexp)
@@ -40,7 +41,7 @@ Fixpoint iter_loop_body
   match n with
   | O =>
      fun st1 t st2 =>
-       (st1 = st2 /\ t = 1) /\ ~beval b st1
+       (st1 = st2 /\ t = 0) /\ ~beval b st1
   | S n' =>
      fun st1 t st3 =>
        (exists t1 t2 st2,
@@ -65,6 +66,7 @@ Fixpoint ceval (c: com): state -> Z -> state -> Prop :=
   | CWhile b c => loop_sem b (ceval c)
   end.
 
+(*
 Theorem command_cost_time : forall c st1 st2 t,
   ceval c st1 t st2 -> 0 < t.
 Proof.
@@ -92,5 +94,6 @@ Proof.
       specialize (IHc _ _ _ H).
       omega.
 Qed.
+*)
 
 End Command_Denotation_With_Steps.

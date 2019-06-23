@@ -158,7 +158,6 @@ Proof.
   }
 Qed.
 
-(* TODO: fix if to fit new AB *)
 Lemma hoare_if_same_sound : forall P Q (b: bexp) c1 c2 T,
   |== {{ P AND {[b]} }} c1 {{ Q }} $ T ->
   |== {{ P AND NOT {[b]} }} c2 {{ Q }} $ T ->
@@ -179,14 +178,14 @@ Proof.
   destruct H2 as [[? ?] | [? ?]].
   - (* if branch *)
     pose proof beval_bexp'_denote st1 La b.
-    pose proof H La st1 st2 (t-1).
+    pose proof H La st1 st2 t.
     split.
     {
       tauto.
     }
     {
-      assert (ab_eval La T a1 a2 (t - 1)) as HAB. tauto.
-      pose proof command_cost_time _ _ _ _ H2 as HT.
+      assert (ab_eval La T a1 a2 t) as HAB. tauto.
+(*      pose proof command_cost_time _ _ _ _ H2 as HT.*)
       clear H H0 H1 H2 H3 H4 H5.
       destruct T;
       unfold ab_eval in *;
@@ -224,6 +223,7 @@ Proof.
           pose proof Z.min_glb _ _ _ H5 H4.
           omega.
         + pose proof Z.le_max_l (a2 * T) (a2' * T).
+(*
           assert (t <= 2 * t - 2).
           {
             rewrite <- Z.add_diag.
@@ -232,18 +232,19 @@ Proof.
             apply Zplus_le_compat_l.
             omega.
           }
+*)
           omega.
     }
   - (* else branch *)
     pose proof beval_bexp'_denote st1 La b.
-    pose proof H0 La st1 st2 (t-1).
+    pose proof H0 La st1 st2 t.
     split.
     {
       tauto.
     }
     {
-      assert (ab_eval La T a1' a2' (t - 1)) as HAB. tauto.
-      pose proof command_cost_time _ _ _ _ H2 as HT.
+      assert (ab_eval La T a1' a2' t) as HAB. tauto.
+(*      pose proof command_cost_time _ _ _ _ H2 as HT.*)
       clear H H0 H1 H2 H3 H4 H5.
       destruct T;
       unfold ab_eval in *;
@@ -281,6 +282,7 @@ Proof.
           pose proof Z.min_glb _ _ _ H5 H4.
           omega.
         + pose proof Z.le_max_r (a2 * T) (a2' * T).
+(*
           assert (t <= 2 * t - 2).
           {
             rewrite <- Z.add_diag.
@@ -289,6 +291,7 @@ Proof.
             apply Zplus_le_compat_l.
             omega.
           }
+*)
           omega.
     }
 Qed.
@@ -471,8 +474,8 @@ Proof.
     - Search Interp_Lupdate.
       Admitted.
 
-Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (m : logical_var) (n : logical_var) (C : Z) c p,
-  {[b]} |-- (0 < V)%assert ->
+Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (n : logical_var) (C : Z) c p,
+  (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (0 < V))) ->
   assn_occur n P = O ->
   term_occur n V = O ->
   bexp_occur n b = O ->
@@ -515,16 +518,23 @@ Proof.
       tauto.
     + subst st2 t.
       unfold ab_eval.
-      intros. admit. (* We have a problem here! Nothing specify any property about p. *)
+      intros.
+      rewrite poly_mult_spec, LINEAR_spec.
+      pose proof Hpre _ H2.
+      split; [omega |].
+      apply Z.mul_nonneg_nonneg; [omega |].
+      apply Z.mul_nonneg_nonneg; auto.
   - simpl in H2.
     destruct H2 as [[t1 [t2 [st3 [? [? ?]]]]] ?].
 
     assert (0 < La n) as Hn.
     {
-      unfold derives in H.
-      simpl in H.
-      unfold FOL_provable in H.
-      admit.
+      pose proof H st1 La.
+      simpl in H7.
+      rewrite H3 in H7.
+      apply H7.
+      pose proof beval_bexp'_denote st1 La b.
+      tauto.
     }
 
     pose proof beval_bexp'_denote st1 La b.
@@ -602,7 +612,46 @@ Proof.
       rewrite Z.mul_add_distr_r.
       rewrite Z.mul_1_r.
       exact H7.
-Admitted.
+Qed.
+
+Definition FOL_valid {T: FirstOrderLogic} (P: Assertion): Prop :=
+  forall J: Interp, J |== P.
+
+Definition FOL_sound (T: FirstOrderLogic): Prop :=
+  forall P: Assertion, FOL_provable P -> FOL_valid P.
+
+Theorem hoare_consequence_sound (F: FirstOrderLogic) : forall (P P' Q Q' : Assertion) c (T : AsymptoticBound),
+      FOL_sound F ->
+      P |-- P' ->
+      |== {{P'}} c {{Q'}} $ T ->
+      Q' |-- Q ->
+      |== {{P}} c {{Q}} $ T.
+Proof.
+  intros.
+  unfold FOL_sound in H.
+  unfold derives in H0, H2.
+  apply H in H0.
+  apply H in H2.
+  unfold FOL_valid in H0, H2.
+  simpl in H0, H2.
+  unfold valid in H1.
+  unfold valid.
+  
+  destruct H1 as [a1 [a2 [h1 [h2 ?]]]].
+  exists a1, a2.
+  split; auto.
+  split; auto.
+  
+  intros.
+  assert ((st1, La) |== P').
+  {
+    specialize (H0 (st1, La)).
+    tauto.
+  }
+  pose proof H1 _ _ _ t H5 H4.
+  specialize (H2 (st2, La)).
+  tauto.
+Qed.
 
 Theorem hoare_logic_sound (F: FirstOrderLogic) : forall P Q c T,
   |-- {{P}} c {{Q}} $ T ->
