@@ -116,6 +116,14 @@ Proof.
   repeat split; auto; try omega.
 Qed.
 
+Lemma post_loop_der : forall m n,
+  {[X]} + {[Y]} == m + n AND 0 <= m AND NOT {[!(X == 0)]}
+  |-- {[Y]} == m + n.
+Proof.
+  entailer.
+  omega.
+Qed.
+
 Fact slow_addition_correct : forall (m n : logical_var),
   |-- {{ {[X]} == m AND {[Y]} == n AND 0 <= m }}
       While !(X == 0) Do
@@ -123,10 +131,14 @@ Fact slow_addition_correct : forall (m n : logical_var),
         X ::= X - 1
       EndWhile
       {{ {[Y]} == m + n }}
-      $ BigTheta LINEAR m.
+      $ BigO LINEAR m.
 Proof.
   intros.
-  pose proof hoare_while_linear.
+  eapply hoare_consequence.
+  apply pre_loop_der.
+  2:{ apply post_loop_der. }
+  apply hoare_while_linear.
+  pose proof 
   
 Admitted.
 
