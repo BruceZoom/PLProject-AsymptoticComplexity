@@ -1,4 +1,4 @@
-Require Import AB.Imp8.
+Require Import AB.Imp9.
 Require Import AB.HoareLogic.
 
 Import Assertion_D.
@@ -47,7 +47,7 @@ Proof.
     3:{ apply post_loop_body. }
     2:{ apply hoare_asgn_bwd. }
     apply pre_loop_body.
-Admitted.
+Qed.
 
 End Simple_Loop_Demo.
 

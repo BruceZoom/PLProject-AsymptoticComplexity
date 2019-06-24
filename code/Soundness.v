@@ -1,4 +1,4 @@
-Require Import AB.Imp8.
+Require Import AB.Imp9.
 Require Import AB.Denotation.
 Require Import AB.HoareLogic.
 Require Import Coq.Lists.List.
@@ -297,7 +297,7 @@ Proof.
     }
 Qed.
 
-(*Lemma hoare_loosen_sound : forall P Q c T1 T2,
+Lemma hoare_loosen_sound : forall P Q c T1 T2,
   T1 =< T2 ->
   |== {{P}} c {{Q}} $ T1 ->
   |== {{P}} c {{Q}} $ T2.
@@ -372,7 +372,7 @@ Proof.
         rewrite H6.
       
   }
-Admitted.*)
+Admitted.
 
 Print aexp.
 Print term.

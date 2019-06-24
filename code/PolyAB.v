@@ -786,10 +786,201 @@ Fact poly_get_last_in_poly:
 Proof.
   intros.
 Admitted.
-  
-Lemma poly_distr_coef_compare: forall a,
-  repeat
 
+Lemma poly_distr_coef_compare:
+  forall K (N : nat) n,
+  K > 0 ->
+  n > 0 ->
+  poly_eval ((repeat 0 (Z.to_nat (Z.of_nat N-1))) ++ (K * Z.of_nat N)::nil) n >= 
+  poly_eval (repeat K N) n.
+Proof.
+  assert (forall N:nat, (Datatypes.length (repeat 0 N)) = N) as lem_repeat.
+  { intros. simpl.
+    induction N.
+    - simpl. reflexivity.
+    - simpl. rewrite IHN. reflexivity.
+  }
+  intros.
+  induction N.
+  - simpl. omega.
+  - pose proof poly_eval_app (repeat 0 (Z.to_nat (Z.of_nat (S N) - 1))) (K * Z.of_nat (S N) :: nil) n.
+    rewrite H1.
+    pose proof poly_eval_zero (Z.to_nat (Z.of_nat (S N) - 1)).
+    rewrite H2.
+    pose proof lem_repeat (Z.to_nat (Z.of_nat (S N) - 1))%nat.
+    rewrite H3.
+    pose proof Z2Nat.id (Z.of_nat (S N) - 1).
+    assert (0 <= Z.of_nat (S N) - 1).
+    { clear IHN H1 H2 H3 H4.
+      induction N. - simpl. omega.
+      - pose proof Nat2Z.inj_succ (S N).
+        rewrite H1.
+        pose proof Z.le_succ_diag_r (Z.of_nat (S N)).
+        omega.
+    }
+    pose proof H4 H5.
+    rewrite H6.
+    assert (poly_eval (K * Z.of_nat (S N) :: nil) n = K * Z.of_nat (S N)).
+    { simpl. omega. }
+    rewrite H7.
+    rewrite Z.add_0_l.
+    assert (S N = N + 1)%nat. { omega. }
+    rewrite H8.
+    assert (Z.of_nat (N + 1) - 1 = Z.of_nat N).
+    { pose proof Nat2Z.inj_sub (N+1) 1.
+      assert (1 <= N + 1)%nat. omega.
+      pose proof H9 H10. simpl in H11.
+      assert (N+1-1=N)%nat. omega.
+      rewrite H12 in H11.
+      omega.
+    }
+    rewrite H9.
+    
+    clear H1 H2 H3 H4 H5 H6 H7 H8 H9.
+    pose proof poly_eval_app (repeat 0 (Z.to_nat (Z.of_nat N - 1))) (K * Z.of_nat N :: nil) n.
+    rewrite H1 in IHN.
+    pose proof poly_eval_zero (Z.to_nat (Z.of_nat N - 1)) n.
+    rewrite H2 in IHN.
+    pose proof lem_repeat (Z.to_nat (Z.of_nat N - 1))%nat.
+    rewrite H3 in IHN.
+    assert (poly_eval (K * Z.of_nat N :: nil) n = K * Z.of_nat N).
+    { simpl. omega. }
+    rewrite H4 in IHN.
+    rewrite Z.add_0_l in IHN.
+    assert (Z.to_nat (Z.of_nat N - 1) = N - 1)%nat.
+    { pose proof Nat2Z.id N.
+      pose proof Z2Nat.inj_sub (Z.of_nat N) 1.
+      assert (0<=1). omega. pose proof H6 H7.
+      rewrite H5 in H8.
+      assert (Z.to_nat 1 = 1)%nat. 
+      { simpl. apply Pos2Nat.inj_1. }
+      rewrite H9 in H8.
+      exact H8.
+    }
+    rewrite H5 in IHN.
+    
+    clear H1 H2 H3 H4 H5.
+    assert (poly_eval (repeat K (N + 1)) n = K * n ^ (Z.of_nat N) + poly_eval (repeat K N) n).
+    { clear IHN.
+      induction N.
+      - simpl. omega.
+      - assert (poly_eval (repeat K (S N + 1)) n = K + n * poly_eval (repeat K (S N)) n).
+        { clear IHN. simpl. induction N.
+          - simpl. omega.
+          - simpl. rewrite IHN. omega.
+        }
+        rewrite H1.
+        assert (S N = N + 1)%nat. omega.
+        rewrite <- H2 in IHN.
+        rewrite IHN at 1.
+        rewrite Z.mul_add_distr_l.
+        assert (n * (K * n ^ Z.of_nat N) = K * n ^ (Z.of_nat (S N))).
+        { rewrite Z.mul_assoc.
+          rewrite Z.mul_shuffle0.
+          pose proof Z.pow_1_r n.
+          rewrite <- H3 at 1.
+          pose proof Z.pow_add_r n 1 (Z.of_nat N).
+          assert (0 <= 1). { omega. }
+          assert (0 <= Z.of_nat N). { omega. }
+          pose proof H4 H5 H6. rewrite <- H7.
+          assert (Z.of_nat (S N) = 1 + Z.of_nat N). 
+          { pose proof Nat2Z.inj_add 1 N. 
+            assert (1 + N = S N)%nat. { omega. }
+            assert (1 = Z.of_nat 1). { simpl. omega. }
+            rewrite H9 in H8.
+            rewrite <- H10 in H8.
+            tauto.
+          }
+          rewrite <- H8. 
+          rewrite Z.mul_comm.
+          omega.
+        }
+        rewrite H3.
+        rewrite Z.add_assoc.
+        assert (K + K * n ^ Z.of_nat (S N) + n * poly_eval (repeat K N) n = K * n ^ Z.of_nat (S N) + (K + n * poly_eval (repeat K N) n)).
+        { omega. }
+        rewrite H4.
+        assert (K + n * poly_eval (repeat K N) n = poly_eval (repeat K (S N)) n).
+        { simpl. omega. }
+        rewrite H5.
+        omega.
+      }
+      rewrite H1.
+      assert (n ^ Z.of_nat N * (K * Z.of_nat (N + 1)) >= n ^ Z.of_nat (N - 1) * (K * Z.of_nat N) + K * n ^ Z.of_nat N).
+      { clear H1.
+        assert (Z.of_nat (N + 1) = Z.of_nat N + 1). 
+        { pose proof Nat2Z.inj_add N 1. simpl in H1. 
+          tauto.
+        }
+        rewrite H1.
+        rewrite Z.mul_add_distr_l.
+        rewrite Z.mul_add_distr_l.
+        assert (n >= 1). { omega. }
+        assert (n ^ Z.of_nat N >= n ^ Z.of_nat (N - 1)).
+        { clear IHN H1.
+          induction N.
+          - simpl. omega.
+          - assert (n ^ Z.of_nat (S N) = n * n ^ Z.of_nat N).
+            { assert (S N = N + 1)%nat. omega.
+              rewrite H1. clear H1.
+              assert (Z.of_nat (N + 1) = Z.of_nat N + 1). 
+              { pose proof Nat2Z.inj_add N 1. simpl in H1. 
+                tauto.
+              }
+              rewrite H1. clear H1.
+              pose proof Z.pow_add_r n (Z.of_nat N) 1.
+              assert (0 <= Z.of_nat N). omega.
+              assert (0 <= 1). omega.
+              pose proof H1 H3 H4. rewrite H5.
+              rewrite Z.pow_1_r.
+              rewrite Z.mul_comm.
+              reflexivity.
+            }
+            rewrite H1.
+            assert (S N - 1 = N)%nat. omega.
+            rewrite H3.
+            pose proof Z.le_mul_diag_r (n ^ Z.of_nat N) n.
+            assert (0 < n ^ Z.of_nat N).
+            { apply Z.pow_pos_nonneg. omega. omega. }
+            assert (1<=n). omega.
+            pose proof H4 H5.
+            apply H7 in H6.
+            rewrite Z.mul_comm in H6.
+            omega.
+        }
+        assert (n ^ Z.of_nat N * (K * 1) = K * n ^ Z.of_nat N).
+        { ring. }
+        rewrite H4.
+        apply Z.le_ge.
+        pose proof Zplus_le_compat_r (n ^ Z.of_nat (N - 1) * (K * Z.of_nat N)) (n ^ Z.of_nat N * (K * Z.of_nat N)) (K * n ^ Z.of_nat N).
+        assert (n ^ Z.of_nat (N - 1) * (K * Z.of_nat N) <= n ^ Z.of_nat N * (K * Z.of_nat N)).
+        { clear H5.
+          
+        
+        
+Admitted.
+
+Fact poly_mono_cons: forall p a,
+  poly_monomialize (a :: p) = 0 :: poly_monomialize p.
+Proof.
+  intros
+
+Fact poly_mono_length_invar: forall p : poly,
+  length p = length (poly_monomialize p).
+Proof.
+  intros.
+  induction p.
+  - simpl. omega.
+  - simpl.
+
+Inductive term_by_term_lt (p1 p2 :poly) : Prop :=
+  | TBT_NIL : 
+  end.
+
+Lemma poly_each_coef_compare:
+  forall p1 p2 n,
+  term_by_term_lt p1 p2 -> poly_eval p1 n <= poly_eval p2 n.
+            
 End Monomial.
 
 Module Polynomial_Asympotitic_Bound.
