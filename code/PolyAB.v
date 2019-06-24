@@ -795,11 +795,58 @@ Proof.
         tauto.
 Qed.
 
+Lemma rev_nil : forall (l : list Z), nil = rev l -> l = nil.
+Proof.
+  intros.
+  destruct l.
+  - auto.
+  - assert (length (rev (z :: l)) = length (rev (z :: l))). auto.
+    rewrite <- H in H0 at 1.
+    simpl in H0. rewrite app_length in H0.
+    simpl in H0. rewrite Nat.add_1_r in H0.
+    inversion H0.
+Qed.
+
+Lemma non_empty_list : forall (l : list Z),
+  l <> nil -> exists l' a, l = l' ++ a :: nil.
+Proof.
+  intros.
+  remember (rev l) as rl.
+  destruct rl.
+  - apply rev_nil in Heqrl.
+    congruence.
+  - assert (rev (z :: rl) = rev (rev l)).
+    rewrite Heqrl. reflexivity.
+    simpl in H0. rewrite rev_involutive in H0.
+    exists (rev rl), z. auto.
+Qed.
+
+Lemma poly_get_last_spec : forall l a,
+  poly_get_last (l ++ a :: nil) = a.
+Proof.
+  intros.
+  induction l.
+  - auto.
+  - simpl.
+    destruct (l ++ a :: nil) eqn:eq.
+    + assert (length (l ++ a :: nil) = length (l ++ a :: nil)); auto.
+      rewrite eq in H at 1.
+      simpl in H. rewrite app_length in H.
+      simpl in H. rewrite Nat.add_1_r in H.
+      inversion H.
+    + auto.
+Qed.
+
 Fact poly_get_last_in_poly:
   forall p, p <> nil -> In (poly_get_last p) p.
 Proof.
   intros.
-Admitted.
+  apply non_empty_list in H as [l' [a ?]].
+  rewrite H at 1.
+  rewrite poly_get_last_spec, H.
+  rewrite in_app_iff.
+  right. simpl. left. auto.
+Qed.
 
 Lemma poly_distr_coef_compare:
   forall K (N : nat) n,
