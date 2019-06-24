@@ -3,6 +3,8 @@ The project for programming language course. The main goal of the project is to 
 
 ___First three sections are almost the same as the ones in proposal and mid-term check, you may skip to the last section to see proof outlines.___
 
+_We failed to update lines for each definition and theorems and to include some new definitions and theorems here, due to limited time. We are very sorry for that._
+
 ## __Project Goals__
 - [x] Define __polynomial__ to support operations and simplifications in asymptotic bounds.
 - [x] Define various __asymptotic bounds__ and __asymptotic notations__ in coq.
@@ -24,11 +26,12 @@ ___First three sections are almost the same as the ones in proposal and mid-term
   - [ ] Hoare Sequence BigO
   - [ ] Hoare Sequence BigOmega
   - [x] Hoare If Same
-  - [ ] Hoare Loosen (New Rule)
-  - [ ] Hoare While Linear
+  - [x] Hoare Loosen (New Rule)
+  - [x] Hoare While Linear
   - [ ] Hoare While General
 - Prove __the correctness and asymptotic complexity for some simple algorithms__ encountered in class using what we will build.
-  - [ ] Slow Addition
+  - [x] Simple While
+  - [x] Slow Addition
   - [ ] Min While
 
 ## __Constraints__
@@ -140,7 +143,15 @@ All the Hoare Rules contain the part we have declared in class, thus we will not
   - Auxiliary properties about _poly_ is required to prove the loosening rule for asymptotic bounds that have the same highest order.
 - __hoare_while_linear_sound__ (at ___line 354___)
   - Stating that if the loop variant decrease linearly, by __multiplying__ a linear term onto the asymptotic bound for the inner command, we get the time complexity for the whole loop.
-  - We have just reached the stage to come up with Hoare While Rules, thus this rule requires certain revision and generalization.
+  - There are other conditions to be satisfied:
+    1) (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (0 < V))):
+      Loop invariant and the trueness of loop condition imply the status of loop variant.
+    2) assn_occur n P = O /\ term_occur n V = O /\ bexp_occur n b = O:
+      The logical variable bound to loop variant does not occur in other parts of the pre-condition.
+    3) (forall x, 0 < x -> 0 <= poly_eval p x):
+      The time cost is non-negative when input size is positive.
+    4) (forall x y, x <= y -> poly_eval p x <= poly_eval p y):
+      The time cost increases as input size increase.
 - hoare_consequence_sound (at ___line x___)
   - Stating that consequence rule holds for the Hoare logic, if time complexity stays unchanged.
 - hoare_logic_sound (at ___line 361___)
@@ -168,7 +179,8 @@ All the Hoare Rules contain the part we have declared in class, thus we will not
 ### __hoare_seq_bigtheta_sound__
 - __Construct Coefficient:__ The coefficient for the lower bound is the minimum of original lower bound coefficient. The coefficient for the upper bound is the maximum of original upper bound coefficient.
 - __Main Proof Idea for Time Complexity:__ Move the multiplier, i.e. the results of polynomial evaluations, inside the _min_ and _max_, and by the upper and lower bounds of each term in the given condition, we can get the total of upper and lower bounds. By relaxing the minimum and maximum to one of the operands, we can proof the inequality.
-    $$
+  ![](fig/eq1.png)
+    <!-- $$
     \begin{cases}
     a1 * P1(n) \le t1 \le a2 * P1(n) \\
     a1' * P2(n) \le t2 \le a2' * P2(n) \\
@@ -183,19 +195,23 @@ All the Hoare Rules contain the part we have declared in class, thus we will not
     & \qquad \le max(a2 * P1(n), a2' * P1(n)) + min(a2 * P2(n), a2' * P2(n)) \\
     & = max(a2, a2') * (P1(n) + P2(n)) \\
     \end{aligned}
-    $$
+    $$ -->
 ### __hoare_if_same_sound__
 - __Construct Coefficient:__ Again, the coefficient for the lower bound is the minimum of original lower bound coefficient. The coefficient for the upper bound is the maximum of original upper bound coefficient.
 - __Main Proof Idea for Time Complexity:__ Taking BigTheta case in IF branch for example:
-  - $$
+  - \
+    ![](fig/eq2.png) 
+    <!-- $$
     \begin{cases}
     0 \le a1 * P(n) \\
     0 \le a1' * P(n)
     \end{cases}\\
     \Downarrow \\
     0 \le min(a1 * P(n), a1' * P(n)) = min(a1, a1') * P(n)
-    $$
-  - $$
+    $$ -->
+  - \
+    ![](fig/eq3.png)
+    <!-- $$
     a1 * P(n) \le a2 * P(n)\\
     \Downarrow\\
     \begin{aligned}
@@ -207,14 +223,15 @@ All the Hoare Rules contain the part we have declared in class, thus we will not
     & \qquad \le max(a2 * P(n), a2' * P(n))\\
     &= max(a2, a2') * P(n)\\
     \end{aligned}
-    $$
-  - Almost the same as the IF branch, but we will use $a1'$ and $a2'$ to relax minimum and maximum, because they are the ones specified by the command in the ELSE branch.
+    $$ -->
+  - The proof for ELSE branch is almost the same as the IF branch, but we will use $a1'$ and $a2'$ to relax minimum and maximum, because they are the ones specified by the command in the ELSE branch.
 ### __hoare_loosen_sound__
 - Main proof outline is to induct over _loosen_ relation, and prove goals for each loosen rule.
 - Since other loosen rules are relatively simple, we only briefly illustrate the proof idea behind O_Poly2Mono rule.
 - In fact, one hoare_loosen rule contains a family of rules. It is exhausting to write out the informal ideas of all those rules after we proved them in Coq. You may simply look into our code to go through proofs for other simple rules.
 - The main idea for the proof of this loosen rule is as follows:
-  $$
+    ![](fig/eq4.png)
+  <!-- $$
   \text{For arbitrary polynomial of order } N - 1, n > 0\\
   K = \max(0, a_N, \cdots, a_1)\\
   \Downarrow\\
@@ -223,21 +240,22 @@ All the Hoare Rules contain the part we have declared in class, thus we will not
   t \le a * P(n) \le (a*N*K) * M(n, N)\\
   \text{M(n, N) denotes the monomial of order N-1}\\
   \text{(a * N * K) is the coefficient to be constructed}
-  $$
+  $$ -->
 ### __Lemmas for hoare_while_linear_sound__
 - There are 3 lemmas for the proof of hoare_while_linear_sound. They states that __if a logical variable does not occur in A, then update its value in logical assignment does not effect the meaning of A__.
 - The proofs are simply apply __induction or mutual induction over the structure of A__.
 ### __hoare_while_linear_sound__
 - __Construct Coefficient:__  We reuse the coefficients from the loop body to be those of the entire loop.
 - __Main Proof Idea for Time Complexity:__ The main idea of the proof for time complexity is as follows:
-    $$
+    ![](fig/eq5.png)
+    <!-- $$
     \begin{cases}
     P(1) \le P(2) \le ... \le P(n)\\
     \forall n, t(n) \le a2 * P(n)\\
     \end{cases}\\
     \Downarrow\\
     T = \sum_k t(k) \le \sum_k a2 * P(k) \le a2 * n * P(n) \qquad (*)
-    $$
+    $$ -->
 - __Brief Informal Proof__
     ```
     First, we do induction over the loop time n'.

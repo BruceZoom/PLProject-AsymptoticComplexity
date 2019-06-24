@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>README.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: "Segoe WPC", "Segoe UI", "SFUIText-Light", "HelveticaNeue-Light", sans-serif, "Droid Sans Fallback";
+	font-size: 14px;
+	padding: 0 12px;
+	line-height: 22px;
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	color: #4080D0;
+	text-decoration: none;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+h1 code,
+h2 code,
+h3 code,
+h4 code,
+h5 code,
+h6 code {
+	font-size: inherit;
+	line-height: auto;
+}
+
+a:hover {
+	color: #4080D0;
+	text-decoration: underline;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left: 5px solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 14px;
+	line-height: 19px;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+.mac code {
+	font-size: 12px;
+	line-height: 18px;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+/** Theming */
+
+.vscode-light,
+.vscode-light pre code {
+	color: rgb(30, 30, 30);
+}
+
+.vscode-dark,
+.vscode-dark pre code {
+	color: #DDD;
+}
+
+.vscode-high-contrast,
+.vscode-high-contrast pre code {
+	color: white;
+}
+
+.vscode-light code {
+	color: #A31515;
+}
+
+.vscode-dark code {
+	color: #D7BA7D;
+}
+
+.vscode-light pre:not(.hljs),
+.vscode-light code > div {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre:not(.hljs),
+.vscode-dark code > div {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre:not(.hljs),
+.vscode-high-contrast code > div {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+.vscode-light blockquote,
+.vscode-dark blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.vscode-high-contrast blockquote {
+	background: transparent;
+	border-color: #fff;
+}
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family:  "Meiryo", "Segoe WPC", "Segoe UI", "SFUIText-Light", "HelveticaNeue-Light", sans-serif, "Droid Sans Fallback";
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+</head>
+<body>
+<h1 id="pl-project-asymptotic-complexity">PL-Project: Asymptotic Complexity</h1>
+<p>The project for programming language course. The main goal of the project is to introduce the concept of asymptotic complexity into the proof system defined by Hoare Logic and based on Denotational Semantics.</p>
+<p><em><strong>First three sections are almost the same as the ones in proposal and mid-term check, you may skip to the last section to see proof outlines.</strong></em></p>
+<p><em>We failed to update lines for each definition and theorems and to include some new definitions and theorems here, due to limited time. We are very sorry for that.</em></p>
+<h2 id="project-goals"><strong>Project Goals</strong></h2>
+<ul>
+<li><input type="checkbox" id="checkbox0" checked="true"><label for="checkbox0">Define </label><strong>polynomial</strong> to support operations and simplifications in asymptotic bounds.</li>
+<li><input type="checkbox" id="checkbox1" checked="true"><label for="checkbox1">Define various </label><strong>asymptotic bounds</strong> and <strong>asymptotic notations</strong> in coq.</li>
+<li><input type="checkbox" id="checkbox2" checked="true"><label for="checkbox2">Update </label><strong>denotational semantics</strong> to include time step (done in class) and to fit our project.</li>
+<li>Adapt Hoare logic to include <strong>the proof system for asymptotic complexity</strong>.
+<ul>
+<li><input type="checkbox" id="checkbox3" checked="true"><label for="checkbox3">Hoare Skip</label></li>
+<li><input type="checkbox" id="checkbox4" checked="true"><label for="checkbox4">Hoare Assignment</label></li>
+<li><input type="checkbox" id="checkbox5" checked="true"><label for="checkbox5">Hoare Sequence BigTheta</label></li>
+<li><input type="checkbox" id="checkbox6"><label for="checkbox6">Hoare Sequence BigO</label></li>
+<li><input type="checkbox" id="checkbox7"><label for="checkbox7">Hoare Sequence BigOmega</label></li>
+<li><input type="checkbox" id="checkbox8" checked="true"><label for="checkbox8">Hoare If Same</label></li>
+<li><input type="checkbox" id="checkbox9" checked="true"><label for="checkbox9">Hoare Loosen (New Rule)</label></li>
+<li><input type="checkbox" id="checkbox10" checked="true"><label for="checkbox10">Hoare While Linear</label></li>
+<li><input type="checkbox" id="checkbox11"><label for="checkbox11">Hoare While General</label></li>
+</ul>
+</li>
+<li>Prove <strong>the soundness of Hoare logic</strong>, both the basic Hoare logic and the proof system for asymptotic complexity.
+<ul>
+<li><input type="checkbox" id="checkbox12" checked="true"><label for="checkbox12">Hoare Skip</label></li>
+<li><input type="checkbox" id="checkbox13" checked="true"><label for="checkbox13">Hoare Assignment</label></li>
+<li><input type="checkbox" id="checkbox14" checked="true"><label for="checkbox14">Hoare Sequence BigTheta</label></li>
+<li><input type="checkbox" id="checkbox15"><label for="checkbox15">Hoare Sequence BigO</label></li>
+<li><input type="checkbox" id="checkbox16"><label for="checkbox16">Hoare Sequence BigOmega</label></li>
+<li><input type="checkbox" id="checkbox17" checked="true"><label for="checkbox17">Hoare If Same</label></li>
+<li><input type="checkbox" id="checkbox18" checked="true"><label for="checkbox18">Hoare Loosen (New Rule)</label></li>
+<li><input type="checkbox" id="checkbox19" checked="true"><label for="checkbox19">Hoare While Linear</label></li>
+<li><input type="checkbox" id="checkbox20"><label for="checkbox20">Hoare While General</label></li>
+</ul>
+</li>
+<li>Prove <strong>the correctness and asymptotic complexity for some simple algorithms</strong> encountered in class using what we will build.
+<ul>
+<li><input type="checkbox" id="checkbox21" checked="true"><label for="checkbox21">Simple While</label></li>
+<li><input type="checkbox" id="checkbox22" checked="true"><label for="checkbox22">Slow Addition</label></li>
+<li><input type="checkbox" id="checkbox23"><label for="checkbox23">Min While</label></li>
+</ul>
+</li>
+</ul>
+<h2 id="constraints"><strong>Constraints</strong></h2>
+<p>There are several constraints that might limit what we can do or simplify what we want to do.</p>
+<ul>
+<li>We do not consider programs with <strong>control statements</strong>, i.e. <em>break</em> and <em>continue</em>. Moreover, we do not wish to alter the potential path of program execution in similar ways, which makes the execution time almost independent with the <strong>distribution of input data</strong>. This cause us unable to verify the asymptotic complexity of algorithms like Quick Sort, but will simplify our definition of what is Asymptotic Complexity.</li>
+<li>We will use the <strong>the toy language developed in class</strong> or the adapted version of it, which only contains very fundamental operations and statements. This will limit the scope of programs and algorithms we can take into consideration.</li>
+</ul>
+<hr>
+<h2 id="project-overview"><strong>Project Overview</strong></h2>
+<p>Our project has following files:</p>
+<ul>
+<li><strong>Imp8.v</strong>: basic library of the toy language, from the course.</li>
+<li><strong>PolyAB.v</strong>: defines polynomial and its operation, and asymptotic bounds defined on polynomials, and mathematic lemmas used later.</li>
+<li><strong>Denotation.v</strong>: the denational semantics with steps, mainly from the course but modified.</li>
+<li><strong>HoareLogic.v</strong>: the hoare logic with asymptotic bound, should contain rules and provable definition</li>
+<li><strong>Soundness.v</strong>: the proof for the soundness of hoare logic</li>
+<li><strong>Demos.v</strong>: examples of programs proved (or to be proved) using our hoare logic</li>
+<li><strong>AsymptoticBound.v</strong>: pure mathematic asymptotic bound definition attempts (abandonded)</li>
+</ul>
+<h2 id="compilation-order"><strong>Compilation Order</strong></h2>
+<p>Please compile the project in the following order:</p>
+<ul>
+<li>Imp8.v -&gt; PolyAB.v -&gt; Denotation.v -&gt; HoareLogic.v -&gt; Soundness.v -&gt; Demos.v</li>
+</ul>
+<h2 id="definitions"><strong>Definitions</strong></h2>
+<h3 id="polynomial-in-polyabv"><strong>Polynomial</strong> (in PolyAB.v)</h3>
+<ul>
+<li><strong>poly</strong> (at <em><strong>line 11</strong></em>)
+<ul>
+<li>A list of Z, each represents a coefficient at certain term.</li>
+<li>The power increases as the index goes up.</li>
+</ul>
+</li>
+<li><strong>poly_eval</strong> (at <em><strong>line 21</strong></em>)
+<ul>
+<li>A recursive function that evaluates a poly into functions that maps Z to Z based on the semantics.</li>
+</ul>
+</li>
+<li>TPower: (at line 31)
+<ul>
+<li>An auxiliary recursive function that implements the power operation for logical_var.</li>
+</ul>
+</li>
+<li><strong>poly_eval_lv</strong> (at <em><strong>line 37</strong></em>)
+<ul>
+<li>A recursive function that evaluates a poly into functions that maps logical_var to term based on the semantics.</li>
+<li>Might be used in defining recursive equations in Hoare While General Rule.</li>
+</ul>
+</li>
+<li><strong>poly_add</strong> (p1 +++ p2) (at <em><strong>line 48</strong></em>)
+<ul>
+<li>A recursive function that adds two polys into one poly.</li>
+</ul>
+</li>
+<li><strong>trim_0</strong> (at <em><strong>line 56</strong></em>)
+<ul>
+<li>A recursive function that removes 0s at tail, i.e. in the highest order terms.</li>
+<li>Used in determining the valid highest order term.</li>
+</ul>
+</li>
+<li><strong>poly_scalar_mult</strong> (k ** p) (at <em><strong>line 65</strong></em>)
+<ul>
+<li>A recursive function that multiplies a Z scalar to a poly to get a new poly.</li>
+</ul>
+</li>
+<li><strong>poly_mult</strong> (p1 *** p2) (at <em><strong>line 71</strong></em>)
+<ul>
+<li>A recursive function that multiplies two polys to get a new poly.</li>
+</ul>
+</li>
+</ul>
+<h3 id="polynomial-asymptotic-bound-in-polyabv"><strong>Polynomial Asymptotic Bound</strong> (in PolyAB.v)</h3>
+<ul>
+<li><strong>AsymptoticBound</strong> (at <em><strong>line 321</strong></em>)
+<ul>
+<li>An inductive type that specifies different asymptotic bounds.</li>
+</ul>
+</li>
+<li><strong>ab_eval</strong> (at <em><strong>line 326</strong></em>)
+<ul>
+<li>A function that takes Lassn, AsymptoticBound, and other Z parameters to formalize the asymptotic property defined by the asymptotic bound in Porp.</li>
+</ul>
+</li>
+<li><strong>loosen</strong> (T1 =&lt; T2) (at <em><strong>line 338</strong></em>)
+<ul>
+<li>An inductive relation that specifies the loosening relationship between two bounds.</li>
+<li>The first AB (T1) can be relaxed to the second AB (T2).</li>
+<li>We did not prove the correctness in this file, but in the soundness proof of the Hoare Logic.</li>
+</ul>
+</li>
+</ul>
+<h3 id="command-denotation-with-steps-in-denotationv"><strong>Command Denotation With Steps</strong> (in Denotation.v)</h3>
+<ul>
+<li>skip_sem (at <em><strong>line 8</strong></em>)
+<ul>
+<li>Almost the same as the one in class, but we specify the time step for Skip to be 1.</li>
+</ul>
+</li>
+<li>asgn_sem (at <em><strong>line 14</strong></em>)
+<ul>
+<li>Almost the same as the one in class, but we move the time step property outside.</li>
+</ul>
+</li>
+<li>seq_sem (at line 20)
+<ul>
+<li>The same as the one in class.</li>
+</ul>
+</li>
+<li>if_sem (at line 27)
+<ul>
+<li>Almost the same as the one in class, but we move the time step property outside.</li>
+</ul>
+</li>
+<li>loop_sem (at line 53)
+<ul>
+<li>Almost the same as the one in class, but we move the time step property outside.</li>
+</ul>
+</li>
+<li>ceval (at line 59)
+<ul>
+<li>The same as the one in class.</li>
+</ul>
+</li>
+</ul>
+<h3 id="hoare-logic-in-hoarelogicv"><strong>Hoare Logic</strong> (in HoareLogic.v)</h3>
+<ul>
+<li><strong>hoare_triple</strong> ({{ P }}  c  {{ Q }}  $ T) (at <em><strong>line 11</strong></em>)
+<ul>
+<li>An inductive type that specifies the hoare triple.</li>
+<li>Almost the same as the one in class, but with extra asymptotic bound added.</li>
+</ul>
+</li>
+<li><strong>provable</strong> (|-- tr) (at <em><strong>line 17</strong></em>)
+<ul>
+<li>An inductive relation that specifies the Hoare Logic.</li>
+</ul>
+</li>
+</ul>
+<h3 id="soundness-in-soundnessv"><strong>Soundness</strong> (in Soundness.v)</h3>
+<ul>
+<li><strong>valid</strong> (|== tr) (at <em><strong>line 13</strong></em>)
+<ul>
+<li>A function that maps hoare_triple to Prop which specifies the validity of Hoare Rules.</li>
+</ul>
+</li>
+</ul>
+<h2 id="important-theorems"><strong>Important Theorems</strong></h2>
+<h3 id="polynomial-in-polyabv"><strong>Polynomial</strong> (in PolyAB.v)</h3>
+<p>There are many properties about <em>poly</em> we have proven to support later use of it, but the following 4 theorems are the most important ones.</p>
+<ul>
+<li><strong>poly_add_spec</strong> (at <em><strong>line 170</strong></em>)
+<ul>
+<li>Stating that the evaluation of poly_add result is correct.</li>
+</ul>
+</li>
+<li><strong>poly_scalar_mult_spec</strong> (at <em><strong>line 182</strong></em>)
+<ul>
+<li>Stating that the evaluation of poly_scalar_mult result is correct.</li>
+</ul>
+</li>
+<li><strong>poly_mult_spec</strong> (at <em><strong>line 191</strong></em>)
+<ul>
+<li>Stating that the evaluation of poly_mult result is correct.</li>
+</ul>
+</li>
+<li><s><strong>trim_invar</strong> (at <em><strong>line 205</strong></em>)</s>
+<ul>
+<li><s>Stating that after trimming redundant 0s, the evaluation is the same as before.</s></li>
+</ul>
+</li>
+</ul>
+<h3 id="denotation-in-denotationv"><strong>Denotation</strong> (in Denotation.v)</h3>
+<ul>
+<li><s><strong>command_cost_time</strong> (at <em><strong>line 68</strong></em>)</s>
+<ul>
+<li>Stating that any command would cost at least 1 time step.</li>
+<li><s>Apply to the denotational semantics, where Skip also cost 1 time step.</s></li>
+<li><s>This property is important in proving the hoare_if_same_soundness, because previously having Skip inside if statement would invalidate that rule, since unfolding if also takes time.</s></li>
+</ul>
+</li>
+<li><strong>Expanding If and While does not cost time</strong>
+<ul>
+<li>Instead of specify that all command cost at least 1 time step, we specify that expanding If and While statements does not cost time, because analysis of time complexity of algorithms barely counts time spent on unrolling those two statements.</li>
+</ul>
+</li>
+</ul>
+<h3 id="soundness-in-soundnessv"><strong>Soundness</strong> (in Soundness.v)</h3>
+<p>All the Hoare Rules contain the part we have declared in class, thus we will not mention those again.</p>
+<ul>
+<li>hoare_skip_sound (at <em><strong>line 27</strong></em>)
+<ul>
+<li>Stating that Skip has Constant time complexity.</li>
+</ul>
+</li>
+<li>hoare_asgn_bwd_sound (at <em><strong>line 68</strong></em>)
+<ul>
+<li>Stating that Assignment has Constant time complexity.</li>
+</ul>
+</li>
+<li><strong>hoare_seq_bigtheta_sound</strong> (at <em><strong>line 96</strong></em>)
+<ul>
+<li>Stating that the time complexity of Sequenced Command is the <strong>sum</strong> of time complexity for separate commands in the sense of Big Theta.</li>
+</ul>
+</li>
+<li><strong>hoare_if_same_sound</strong> (at <em><strong>line 166</strong></em>)
+<ul>
+<li>Stating that the time complexity of If Command is the <strong>same</strong> as those of its branches, if the time complexity of branch commands are the same.</li>
+</ul>
+</li>
+<li><strong>hoare_loosen_sound</strong> (at <em><strong>line 307</strong></em>)
+<ul>
+<li>Stating that we can <strong>relax</strong> the time complexity of certain command based on the <em>loosen</em> relation.</li>
+<li>Auxiliary properties about <em>poly</em> is required to prove the loosening rule for asymptotic bounds that have the same highest order.</li>
+</ul>
+</li>
+<li><strong>hoare_while_linear_sound</strong> (at <em><strong>line 354</strong></em>)
+<ul>
+<li>Stating that if the loop variant decrease linearly, by <strong>multiplying</strong> a linear term onto the asymptotic bound for the inner command, we get the time complexity for the whole loop.</li>
+<li>There are other conditions to be satisfied:
+<ol>
+<li>(forall st La, ((st, La) |== (P AND {[b]})) -&gt; ((st, La) |== (0 &lt; V))):
+Loop invariant and the trueness of loop condition imply the status of loop variant.</li>
+<li>assn_occur n P = O /\ term_occur n V = O /\ bexp_occur n b = O:
+The logical variable bound to loop variant does not occur in other parts of the pre-condition.</li>
+<li>(forall x, 0 &lt; x -&gt; 0 &lt;= poly_eval p x):
+The time cost is non-negative when input size is positive.</li>
+<li>(forall x y, x &lt;= y -&gt; poly_eval p x &lt;= poly_eval p y):
+The time cost increases as input size increase.</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>hoare_consequence_sound (at <em><strong>line x</strong></em>)
+<ul>
+<li>Stating that consequence rule holds for the Hoare logic, if time complexity stays unchanged.</li>
+</ul>
+</li>
+<li>hoare_logic_sound (at <em><strong>line 361</strong></em>)
+<ul>
+<li>Stating that if a Hoare Triple is provable, then it is valid.</li>
+</ul>
+</li>
+</ul>
+<h3 id="demos-in-demosv"><strong>Demos</strong> (in Demos.v)</h3>
+<ul>
+<li><strong>simple_loop_correct</strong> (at <strong>line 79</strong>)
+<ul>
+<li>This is a simple example to test the usage of Hoare rule for while loop, which slowly decreases X to 0.</li>
+</ul>
+</li>
+<li><strong>slow_addition_correct</strong> (at <em><strong>line 130</strong></em>)
+<ul>
+<li>This example comes from the Exercise 2 of Task 2 in Assignment 2.</li>
+<li>We want to prove that its time complexity is $O(m)$.</li>
+<li>Due to the requirement in while rule, extra conditions are required for the logical_var bound to the loop variant.</li>
+</ul>
+</li>
+<li><s><strong>min_while_correct</strong> (at <em><strong>line 33</strong></em>)</s> <em>We did not have time to prove this.</em>
+<ul>
+<li>This example comes from the Exercise 3 of Task 4 in Assignment 2.</li>
+<li>We want to prove that its time complexity is $O(\min(a, b))$.</li>
+<li>Since we try to prove something that is not a polynomial, a minimum function, using polynomial asymptotic bound, we might get stuck and might change this to something simpler.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="proof-ideas-brief-informal-proofs">Proof Ideas &amp; Brief Informal Proofs</h2>
+<h3 id="hoareskipsound">hoare_skip_sound</h3>
+<ul>
+<li>Simple proof, no detailed informal proof is required.</li>
+</ul>
+<h3 id="hoareasgnbwdsound">hoare_asgn_bwd_sound</h3>
+<ul>
+<li>Simple proof, no detailed informal proof is required.</li>
+</ul>
+<h3 id="hoareseqbigthetasound"><strong>hoare_seq_bigtheta_sound</strong></h3>
+<ul>
+<li><strong>Construct Coefficient:</strong> The coefficient for the lower bound is the minimum of original lower bound coefficient. The coefficient for the upper bound is the maximum of original upper bound coefficient.</li>
+<li><strong>Main Proof Idea for Time Complexity:</strong> Move the multiplier, i.e. the results of polynomial evaluations, inside the <em>min</em> and <em>max</em>, and by the upper and lower bounds of each term in the given condition, we can get the total of upper and lower bounds. By relaxing the minimum and maximum to one of the operands, we can proof the inequality.
+<img src="fig/eq1.png" alt="">  <!-- $$
+  \begin{cases}
+  a1 * P1(n) \le t1 \le a2 * P1(n) \\
+  a1' * P2(n) \le t2 \le a2' * P2(n) \\
+  \end{cases} \\
+  \Downarrow \\
+  \begin{aligned}
+  & min(a1, a1') * (P1(n) + P2(n)) \\
+  & \qquad = min(a1 * P1(n), a1' * P1(n)) + min(a1 * P2(n), a1' * P2(n)) \\
+  & \qquad \le a1 * P1(n) + a1' * P2(n) \\
+  & <= t1 + t2 \\
+  & \qquad \le a2 * P1(n) + a2' * P2(n) \\
+  & \qquad \le max(a2 * P1(n), a2' * P1(n)) + min(a2 * P2(n), a2' * P2(n)) \\
+  & = max(a2, a2') * (P1(n) + P2(n)) \\
+  \end{aligned}
+  $$ -->
+</li>
+</ul>
+<h3 id="hoareifsamesound"><strong>hoare_if_same_sound</strong></h3>
+<ul>
+<li><strong>Construct Coefficient:</strong> Again, the coefficient for the lower bound is the minimum of original lower bound coefficient. The coefficient for the upper bound is the maximum of original upper bound coefficient.</li>
+<li><strong>Main Proof Idea for Time Complexity:</strong> Taking BigTheta case in IF branch for example:
+<ul>
+<li><br>
+<img src="fig/eq2.png" alt=""><!-- $$
+\begin{cases}
+0 \le a1 * P(n) \\
+0 \le a1' * P(n)
+\end{cases}\\
+\Downarrow \\
+0 \le min(a1 * P(n), a1' * P(n)) = min(a1, a1') * P(n)
+$$ -->
+</li>
+<li><br>
+<img src="fig/eq3.png" alt=""><!-- $$
+a1 * P(n) \le a2 * P(n)\\
+\Downarrow\\
+\begin{aligned}
+&min(a1, a1') * P(n)\\
+& \qquad = min(a1 * P(n), a1' * P(n))\\
+& \qquad \le a1 * P(n)   \\
+& \le t\\
+& \qquad \le a2 * P(n) \\
+& \qquad \le max(a2 * P(n), a2' * P(n))\\
+&= max(a2, a2') * P(n)\\
+\end{aligned}
+$$ -->
+</li>
+<li>The proof for ELSE branch is almost the same as the IF branch, but we will use $a1'$ and $a2'$ to relax minimum and maximum, because they are the ones specified by the command in the ELSE branch.</li>
+</ul>
+</li>
+</ul>
+<h3 id="hoareloosensound"><strong>hoare_loosen_sound</strong></h3>
+<ul>
+<li>Main proof outline is to induct over <em>loosen</em> relation, and prove goals for each loosen rule.</li>
+<li>Since other loosen rules are relatively simple, we only briefly illustrate the proof idea behind O_Poly2Mono rule.</li>
+<li>In fact, one hoare_loosen rule contains a family of rules. It is exhausting to write out the informal ideas of all those rules after we proved them in Coq. You may simply look into our code to go through proofs for other simple rules.</li>
+<li>The main idea for the proof of this loosen rule is as follows:
+<img src="fig/eq4.png" alt=""><!-- $$
+\text{For arbitrary polynomial of order } N - 1, n > 0\\
+K = \max(0, a_N, \cdots, a_1)\\
+\Downarrow\\
+\sum_{k=0}^N a_k * n^{k-1} \le \sum_{k=0}^N K * n^{k-1} \le (N * K) * n^{N-1}\\
+\Downarrow\\
+t \le a * P(n) \le (a*N*K) * M(n, N)\\
+\text{M(n, N) denotes the monomial of order N-1}\\
+\text{(a * N * K) is the coefficient to be constructed}
+$$ -->
+</li>
+</ul>
+<h3 id="lemmas-for-hoarewhilelinearsound"><strong>Lemmas for hoare_while_linear_sound</strong></h3>
+<ul>
+<li>There are 3 lemmas for the proof of hoare_while_linear_sound. They states that <strong>if a logical variable does not occur in A, then update its value in logical assignment does not effect the meaning of A</strong>.</li>
+<li>The proofs are simply apply <strong>induction or mutual induction over the structure of A</strong>.</li>
+</ul>
+<h3 id="hoarewhilelinearsound"><strong>hoare_while_linear_sound</strong></h3>
+<ul>
+<li><strong>Construct Coefficient:</strong>  We reuse the coefficients from the loop body to be those of the entire loop.</li>
+<li><strong>Main Proof Idea for Time Complexity:</strong> The main idea of the proof for time complexity is as follows:
+<img src="fig/eq5.png" alt="">  <!-- $$
+  \begin{cases}
+  P(1) \le P(2) \le ... \le P(n)\\
+  \forall n, t(n) \le a2 * P(n)\\
+  \end{cases}\\
+  \Downarrow\\
+  T = \sum_k t(k) \le \sum_k a2 * P(k) \le a2 * n * P(n) \qquad (*)
+  $$ -->
+</li>
+<li><strong>Brief Informal Proof</strong><pre class="hljs"><code><div>First, we do induction over the loop time n'.
+
+1) If n' = 0, 
+    the program does not enter the loop, thus the time cost is 0.
+    By the non-negativity or the sign preserving property (3) of the polynomial p, the inequality holds.
+
+2) If n' &gt; 0,
+    Use the thoughts in (*) to prove the goal.
+
+    Since the loop has carried out once,
+    by the derivation from loop invariant and loop condition to status of loop variant (1) is,
+    the input size should be at least 1 (**).
+
+    Then we need to discuss the input size case by case.
+        Because if n = 1, there is no second round of the loop,
+        and we can not relax any time cost term except the one of the first round since we know nothing about other rounds.
+    
+    a) If n &lt;&gt; 1,
+        combined with the status of loop variant (**) we derived before,
+        we have n &gt; 1.
+        By increasingness of the bound,
+        we can relax the time cost based on (*) and prove the goal.
+    
+    b) If n = 1,
+        the time cost for later rounds, t2, is exactly 0.
+        T = t1 + 0 &lt;= a2 * P(1) &lt;= a2 * 1 * P(1) = a2 * n * P(n)
+
+        We still need to discuss loop time n' to get some properties.
+        i) If n' = 0,
+            no more loop is carried out,
+            thus we can prove the goal.
+        ii) If n' &gt; 0,
+            by the derivation from loop invariant and loop condition to status of loop variant (1),
+            this case is impossible, since there is no more loop rounds.
+</div></code></pre>
+</li>
+</ul>
+<h3 id="hoareconsequencesound">hoare_consequence_sound</h3>
+<ul>
+<li>Simple proof, no detailed informal proof is required.</li>
+</ul>
+<h3 id="hoarelogicsound">hoare_logic_sound</h3>
+<ul>
+<li>The soundness of hoare logic with time complexity is proved by induction over the structure of c, with supports of previous lemmas.</li>
+</ul>
+<h3 id="simpleloopcorrect">simple_loop_correct</h3>
+<ul>
+<li>Simple proof, no detailed informal proof is required.</li>
+</ul>
+<h3 id="slowadditioncorrect"><strong>slow_addition_correct</strong></h3>
+<ul>
+<li><em>Note that this is different from the one in mid-term submission.</em></li>
+<li>The main proof steps are illustrated by the usages of our Hoare Rules.
+<ul>
+<li>Use <strong>hoare_consequence</strong> to adjust the pre-condition and post-condition to fit the form of hoare_while_linear.</li>
+<li>Use <strong>hoare_loosen</strong> <em>twice</em> to adjust the time complexity to fit the form of hoare_while_linear.</li>
+<li>Use <strong>hoare_while_linear</strong> to expand the while loop. Ltac <strong>forward_while_linear</strong> (<em><strong>line 30</strong></em> in Demos.v) is defined to use hoare_while_linear easily.</li>
+<li>Prove other conditions required by hoare_while_linear.</li>
+<li>Use <strong>hoare_loosen</strong> <em>twice</em> to adjust the time complexity to fit the form of hoare_seq_bigtheta.</li>
+<li>Use <strong>hoare_seq_bigtheta</strong> <em>twice</em> to fully expand sequenced command.</li>
+<li>Use <strong>hoare_asgn_bwd</strong> on the third and second assignment command.</li>
+<li>Use <strong>hoare_consequence</strong> to create room of flexibility for using hoare_asgn_bwd on the first assignment command.</li>
+<li>Use <strong>hoare_asgn_bwd</strong> on the first assignment command.</li>
+<li>Prove the derivation from the original pre-condition to the one generated by hoare_asgn_bwd.</li>
+</ul>
+</li>
+</ul>
+
+</body>
+</html>
