@@ -153,15 +153,15 @@ Proof.
       poly_scalar_mult_spec, CONSTANT_spec.
     ring.
   }
-  assert (BigO (3 ** LINEAR) o =< BigO LINEAR o).
+  assert (BigO (3 ** LINEAR) o =< BigO (1 ** LINEAR) o).
   {
-    admit.
+    eapply O_const; simpl; omega.
   }
-  eapply hoare_loosen. apply H1.
-  eapply hoare_loosen. apply H0.
+  eapply hoare_loosen. apply H1. clear H1.
+  eapply hoare_loosen. apply H0. clear H0.
   forward_while_linear.
   - intros.
-    simpl. simpl in H2.
+    simpl. simpl in H0.
     omega.
   - simpl.
     destruct (Nat.eq_dec o m); [congruence |].
@@ -184,8 +184,23 @@ Proof.
       repeat rewrite CONSTANT_spec.
       ring.
     }
+    eapply hoare_loosen.
+    apply H0. clear H0.
     eapply hoare_seq_bigtheta.
-Admitted.
+    2:{
+      eapply hoare_seq_bigtheta.
+      2:{ apply hoare_asgn_bwd. }
+      apply hoare_asgn_bwd.
+    }
+    simpl.
+    eapply hoare_consequence.
+    3:{ apply derives_refl. }
+    2:{ apply hoare_asgn_bwd. }
+    1:{
+      entailer.
+      omega.
+    }
+Qed.
 
 End Slow_Addition_Demo.
 
