@@ -390,6 +390,9 @@ Proof.
       { pose proof poly_eval_mono p (La n).
         rewrite H7.
         pose proof poly_distr_coef_compare (poly_get_max p 0) (Datatypes.length p) (La n).
+        assert (0 = La n \/ 0 < La n). omega.
+        destruct H9.
+        { rewrite <- H9. simpl. 
         pose proof Z.lt_gt _ _ H5 as H5'.
         pose proof H8 H1 H5'.
         clear H8.
