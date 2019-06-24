@@ -11,6 +11,22 @@ Definition FOL_valid (P: Assertion): Prop :=
 Instance TrivialFOL: FirstOrderLogic :=
   {| FOL_provable := (fun P => FOL_valid P) |}.
 
+Lemma convert_IMPLY : forall (P Q : Prop), (P -> Q) -> ~P \/ Q.
+Proof.
+  intros.
+  pose proof excluded_middle P.
+  destruct H0.
+  - left. auto.
+  - right. apply (H H0).
+Qed.
+
+Ltac entailer := 
+    unfold derives, assn_sub;
+    simpl; unfold FOL_valid;
+    intros; simpl;
+    apply convert_IMPLY;
+    intros.
+
 Lemma derives_refl: forall P, P |-- P.
 Proof.
   intros.
@@ -41,35 +57,20 @@ Module Simple_Loop_Demo.
 
 Definition X : var := 0%nat.
 
-Lemma post_loop_body : forall (n : logical_var),
+(* Lemma post_loop_body_der : forall (n : logical_var),
   0 <= {[X]} AND {[X]} == n - 1 |-- 0 <= {[X]} AND {[X]} == n - 1.
 Proof.
   intros.
-  unfold derives, assn_sub.
-  simpl.
-  unfold FOL_valid.
-  intros.
-  simpl.
-  apply excluded_middle.
-Qed.
+  entailer.
+  auto.
+Qed. *)
 
-Lemma pre_loop_body : forall (n : logical_var),
+Lemma pre_loop_body_der : forall (n : logical_var),
   0 <= {[X]} AND {[(! (X == 0))%imp]} AND {[X]} == n
   |-- (0 <= {[X]} AND {[X]} == n - 1) [X |-> (X - 1)%imp].
 Proof.
-  intros.
-  unfold derives, assn_sub.
-  simpl.
-  unfold FOL_valid.
-  intros.
-  simpl.
-  assert (((0 <= fst J X /\ fst J X <> 0) /\ fst J X = snd J n) -> 0 <= fst J X - 1 /\ fst J X - 1 = snd J n - 1).
-  {
-    intros.
-    omega.
-  }
-  pose proof excluded_middle ((0 <= fst J X /\ fst J X <> 0) /\ fst J X = snd J n).
-  tauto.
+  entailer.
+  omega.
 Qed.
 
 Fact simple_loop_correct : forall (n : logical_var),
@@ -94,9 +95,9 @@ Proof.
   - apply hoare_loosen with (BigTheta CONSTANT n).
     apply Theta2O. simpl. omega.
     eapply hoare_consequence.
-    3:{ apply post_loop_body. }
+    3:{ apply derives_refl. }
     2:{ apply hoare_asgn_bwd. }
-    apply pre_loop_body.
+    apply pre_loop_body_der.
 Qed.
 
 End Simple_Loop_Demo.
@@ -106,8 +107,17 @@ Module Slow_Addition_Demo.
 Definition X : var := 0%nat.
 Definition Y : var := 1%nat.
 
-Fact slow_addition_correct (F: FirstOrderLogic): forall (m n : logical_var),
-  |-- {{ {[X]} == m AND {[Y]} == n AND 0 <= m}}
+Lemma pre_loop_der : forall m n,
+  {[X]} == m AND {[Y]} == n AND 0 <= m |--
+  {[X]} + {[Y]} == m + n AND 0 <= m AND {[X]} == m.
+Proof.
+  entailer.
+  destruct H as [[? ?] ?].
+  repeat split; auto; try omega.
+Qed.
+
+Fact slow_addition_correct : forall (m n : logical_var),
+  |-- {{ {[X]} == m AND {[Y]} == n AND 0 <= m }}
       While !(X == 0) Do
         Y ::= Y + 1;;
         X ::= X - 1
@@ -115,7 +125,9 @@ Fact slow_addition_correct (F: FirstOrderLogic): forall (m n : logical_var),
       {{ {[Y]} == m + n }}
       $ BigTheta LINEAR m.
 Proof.
-(* TODO: Fill in here *)
+  intros.
+  pose proof hoare_while_linear.
+  
 Admitted.
 
 End Slow_Addition_Demo.
