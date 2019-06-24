@@ -314,6 +314,19 @@ Qed.
 
 End Polynomial.
 
+Module WZY_Poly_Enhance.
+Export Polynomial.
+
+Inductive list_le : poly -> poly -> Prop :=
+  | nil_le : list_le nil nil
+  | cons_le : forall p1 p2 a1 a2,
+              length p1 = length p2 ->
+              a1 <= a2 ->
+              list_le p1 p2 ->
+              list_le (a1 :: p1) (a2 :: p2).
+
+End WZY_Poly_Enhance.
+
 Module Polynomial_Asympotitic_Bound.
 Export Polynomial.
 Import Assertion_D.
