@@ -5,24 +5,50 @@ Import Assertion_D.
 Import Abstract_Pretty_Printing.
 Import Hoare_Logic.
 
+Definition FOL_valid (P: Assertion): Prop :=
+  forall J: Interp, J |== P.
+
+Instance TrivialFOL: FirstOrderLogic :=
+  {| FOL_provable := (fun P => FOL_valid P) |}.
+
+Axiom excluded_middle : forall P, ~ P \/ P.
+
 Module Simple_Loop_Demo.
 
 Definition X : var := 0%nat.
 
-Lemma post_loop_body (F: FirstOrderLogic): forall (n : logical_var),
+Lemma post_loop_body : forall (n : logical_var),
   0 <= {[X]} AND {[X]} == n - 1 |-- 0 <= {[X]} AND {[X]} == n - 1.
 Proof.
   intros.
-Admitted.
+  unfold derives, assn_sub.
+  simpl.
+  unfold FOL_valid.
+  intros.
+  simpl.
+  apply excluded_middle.
+Qed.
 
-Lemma pre_loop_body (F: FirstOrderLogic): forall (n : logical_var),
+Lemma pre_loop_body : forall (n : logical_var),
   0 <= {[X]} AND {[(! (X == 0))%imp]} AND {[X]} == n
   |-- (0 <= {[X]} AND {[X]} == n - 1) [X |-> (X - 1)%imp].
 Proof.
   intros.
-Admitted.
+  unfold derives, assn_sub.
+  simpl.
+  unfold FOL_valid.
+  intros.
+  simpl.
+  assert (((0 <= fst J X /\ fst J X <> 0) /\ fst J X = snd J n) -> 0 <= fst J X - 1 /\ fst J X - 1 = snd J n - 1).
+  {
+    intros.
+    omega.
+  }
+  pose proof excluded_middle ((0 <= fst J X /\ fst J X <> 0) /\ fst J X = snd J n).
+  tauto.
+Qed.
 
-Fact simple_loop_correct (F: FirstOrderLogic): forall (n : logical_var),
+Fact simple_loop_correct : forall (n : logical_var),
   |-- {{ 0 <= {[X]} AND {[X]} == n }}
       While !(X == 0) Do
         X ::= X - 1
@@ -31,7 +57,7 @@ Fact simple_loop_correct (F: FirstOrderLogic): forall (n : logical_var),
       $ BigO (LINEAR *** CONSTANT) n.
 Proof.
   intros.
-  apply (hoare_while_linear F); auto.
+  apply (hoare_while_linear TrivialFOL); auto.
   - intros.
     simpl in *.
     omega.
