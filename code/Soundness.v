@@ -337,7 +337,6 @@ Proof.
   }
   (* O_Poly2Mono *)
   {
-    (* TODO: Fill in here *)
     exists a1.
     exists ((poly_get_max p 0)*(Z.of_nat (length p))*a2).
     assert (forall (N:nat) (z:Z), (Datatypes.length (repeat z N)) = N) as lem_repeat.
@@ -416,14 +415,17 @@ Proof.
         assert (term_by_term_le p (repeat (poly_get_max p 0) (Datatypes.length p))).
         { unfold term_by_term_le.
           clear H H0 H1 H2 H3 H4 H5 H5' H6 H7 p_gt0 p_nnil FirstPart.
+          remember (poly_get_max p 0) as m.
+          pose proof poly_get_max3 p.
+          rewrite <- Heqm in H. clear Heqm.
           induction p.
           - simpl. apply nil_le.
-          - assert (length p = length (repeat (poly_get_max p 0) (Datatypes.length p))).
-            { pose proof lem_repeat (Datatypes.length p) (poly_get_max p 0).
-              rewrite H.
-              omega.
-            }
-            admit.
+          - simpl. apply cons_le.
+            + rewrite repeat_length. reflexivity.
+            + apply H. simpl. auto.
+            + apply IHp. intros.
+              specialize (H z).
+              apply H. simpl. auto.
          }
          pose proof poly_each_coef_compare p (repeat (poly_get_max p 0) (Datatypes.length p)).
          pose proof lem_repeat (Datatypes.length p) (poly_get_max p 0).
@@ -470,7 +472,8 @@ Proof.
          exact final.
       }
       omega.
-Admitted.
+    }
+Qed.
 
 Print aexp.
 Print term.
