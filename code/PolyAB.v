@@ -960,10 +960,16 @@ Proof.
         
 Admitted.
 
-Fact poly_mono_cons: forall p a,
-  poly_monomialize (a :: p) = 0 :: poly_monomialize p.
+Fact poly_mono_cons: forall a h t,
+  poly_monomialize (a :: h :: t) = 0 :: poly_monomialize (h :: t).
 Proof.
-  intros
+  intros.
+  simpl.
+  assert (Datatypes.length t - 0 = Datatypes.length t)%nat.
+  omega.
+  rewrite H.
+  reflexivity.
+Qed.
 
 Fact poly_mono_length_invar: forall p : poly,
   length p = length (poly_monomialize p).
@@ -971,7 +977,18 @@ Proof.
   intros.
   induction p.
   - simpl. omega.
-  - simpl.
+  - destruct p.
+    + simpl. reflexivity.
+    + pose proof poly_mono_cons a z p.
+      rewrite H.
+      assert (Datatypes.length (a :: z :: p) = 1 + Datatypes.length (z :: p))%nat. { simpl. omega. }
+      assert (Datatypes.length (0 :: poly_monomialize (z :: p)) = plus 1 (Datatypes.length (poly_monomialize (z :: p)))).
+      { simpl. reflexivity. }
+      rewrite H0.
+      rewrite H1.
+      f_equal.
+      omega.
+Qed.
 
 Inductive term_by_term_lt (p1 p2 :poly) : Prop :=
   | TBT_NIL : 
