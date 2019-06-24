@@ -473,6 +473,54 @@ Proof.
       }
       omega.
     }
+    (* O_Poly2Mono *)
+    { exists a1, a2.
+      split. omega.
+      split. omega.
+      intros. 
+      specialize (H0 La st1 st2 t).
+      pose proof H0 H1 H2.
+      destruct H3.
+      split.
+      - tauto.
+      - simpl. simpl in H4.
+        intros. pose proof H4 H5.
+        specialize (H (La n)).
+        rewrite H in H6.
+        exact H6.
+    }
+    (* Theta_id *)
+    { exists a1, a2.
+      split. omega.
+      split. omega.
+      intros. 
+      specialize (H0 La st1 st2 t).
+      pose proof H0 H1 H2.
+      destruct H3.
+      split.
+      - tauto.
+      - simpl. simpl in H4.
+        intros. pose proof H4 H5.
+        specialize (H (La n)).
+        rewrite H in H6.
+        exact H6.
+    }
+    (* Omega_id *)
+    { exists a1, a2.
+      split. omega.
+      split. omega.
+      intros. 
+      specialize (H0 La st1 st2 t).
+      pose proof H0 H1 H2.
+      destruct H3.
+      split.
+      - tauto.
+      - simpl. simpl in H4.
+        intros. pose proof H4 H5.
+        specialize (H (La n)).
+        rewrite H in H6.
+        exact H6.
+    }
 Qed.
 
 Print aexp.
