@@ -11,6 +11,32 @@ Definition FOL_valid (P: Assertion): Prop :=
 Instance TrivialFOL: FirstOrderLogic :=
   {| FOL_provable := (fun P => FOL_valid P) |}.
 
+Lemma derives_refl: forall P, P |-- P.
+Proof.
+  intros.
+  unfold derives, assn_sub.
+  simpl.
+  unfold FOL_valid.
+  intros.
+  simpl.
+  apply excluded_middle.
+Qed.
+
+Lemma derives_trans: forall P Q R, P |-- Q -> Q |-- R -> P |-- R.
+Proof.
+  intros.
+  unfold derives, assn_sub in *.
+  simpl in *.
+  unfold FOL_valid in *.
+  intros.
+  simpl in *. specialize (H J). specialize (H0 J).
+  destruct H.
+  - left. tauto.
+  - destruct H0.
+    + tauto.
+    + right. tauto.
+Qed.
+
 Module Simple_Loop_Demo.
 
 Definition X : var := 0%nat.
@@ -66,7 +92,7 @@ Proof.
     rewrite CONSTANT_spec, CONSTANT_spec.
     omega.
   - apply hoare_loosen with (BigTheta CONSTANT n).
-    apply Theta2O.
+    apply Theta2O. simpl. omega.
     eapply hoare_consequence.
     3:{ apply post_loop_body. }
     2:{ apply hoare_asgn_bwd. }
@@ -100,7 +126,7 @@ Definition A : var := 0%nat.
 Definition B : var := 1%nat.
 Definition C : var := 2%nat.
 
-Fact min_while_correct (F: FirstOrderLogic): forall (a b : Z) (n : logical_var),
+Fact min_while_correct: forall (a b : Z) (n : logical_var),
   |-- {{ {[A]} == a AND {[B]} == b AND 0 <= a AND 0 <= b AND n == Z.min a b }}
       C ::= 0;;
       While (! (A == 0) && ! (B == 0)) Do
@@ -111,7 +137,10 @@ Fact min_while_correct (F: FirstOrderLogic): forall (a b : Z) (n : logical_var),
       {{ {[C]} == a AND a <= b OR {[C]} == b AND b < a }}
       $ BigO LINEAR n.
 Proof.
-(* TODO: Fill in here *)
+  (* TODO: Fill in here *)
+  intros.
+  eapply hoare_consequence.
+  apply derives_refl.
 Admitted.
 
 End Min_While_Demo.
