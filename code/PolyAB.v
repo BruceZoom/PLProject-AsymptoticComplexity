@@ -843,8 +843,8 @@ Proof.
     + auto.
 Qed.
 
-Fact poly_get_last_in_poly:
-  forall (a : Z) p, In (poly_get_last (a::p)) (a::p).
+Fact poly_get_last_in_poly: forall p,
+  p <> nil -> In (poly_get_last p) p.
 Proof.
   intros.
   apply non_empty_list in H as [l' [a ?]].
