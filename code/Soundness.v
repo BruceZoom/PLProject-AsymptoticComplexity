@@ -629,11 +629,11 @@ Proof.
 Qed.
 
 Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (n : logical_var) (C : Z) c p,
-  (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (0 < V))) ->
+  (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (1 < V))) ->
   assn_occur n P = O ->
   term_occur n V = O ->
   bexp_occur n b = O ->
-  (forall x, 0 <= x -> 0 <= poly_eval p x) ->
+  (forall x, 0 < x -> 0 < poly_eval p x) ->
   (forall x y, x <= y -> poly_eval p x <= poly_eval p y) ->
   |== {{P AND {[b]} AND V == n}} c {{P AND V == n-1}} $ BigO p n ->
   |== {{P AND V == n }} While b Do c EndWhile {{ P AND NOT {[b]} }} $ BigO (LINEAR *** p) n.
@@ -677,11 +677,11 @@ Proof.
       pose proof Hpre _ H2.
       split; [omega |].
       apply Z.mul_nonneg_nonneg; [omega |].
-      apply Z.mul_nonneg_nonneg; auto.
+      apply Z.mul_nonneg_nonneg; omega.
   - simpl in H2.
     destruct H2 as [[t1 [t2 [st3 [? [? ?]]]]] ?].
 
-    assert (0 < La n) as Hn.
+    assert (1 < La n) as Hn.
     {
       pose proof H st1 La.
       simpl in H7.
@@ -731,7 +731,7 @@ Proof.
       intros.
       
       specialize (H10 H1); clear H1.
-      assert (0 <= La n - 1). omega.
+      assert (0 < La n - 1). omega.
       specialize (H12 H1); clear H1.
       rewrite H5.
       

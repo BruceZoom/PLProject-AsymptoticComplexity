@@ -18,7 +18,7 @@ Module Simple_Loop_Demo.
 Definition X : var := 0%nat.
 
 Lemma post_loop_body : forall (n : logical_var),
-  0 <= {[X]} AND {[X]} == n - 1 |-- 0 <= {[X]} AND {[X]} == n - 1.
+  1 <= {[X]} AND {[X]} == n - 1 |-- 1 <= {[X]} AND {[X]} == n - 1.
 Proof.
   intros.
   unfold derives, assn_sub.
@@ -30,8 +30,8 @@ Proof.
 Qed.
 
 Lemma pre_loop_body : forall (n : logical_var),
-  0 <= {[X]} AND {[(! (X == 0))%imp]} AND {[X]} == n
-  |-- (0 <= {[X]} AND {[X]} == n - 1) [X |-> (X - 1)%imp].
+  1 <= {[X]} AND {[(! (X == 1))%imp]} AND {[X]} == n
+  |-- (1 <= {[X]} AND {[X]} == n - 1) [X |-> (X - 1)%imp].
 Proof.
   intros.
   unfold derives, assn_sub.
@@ -39,21 +39,21 @@ Proof.
   unfold FOL_valid.
   intros.
   simpl.
-  assert (((0 <= fst J X /\ fst J X <> 0) /\ fst J X = snd J n) -> 0 <= fst J X - 1 /\ fst J X - 1 = snd J n - 1).
+  assert (((1 <= fst J X /\ fst J X <> 1) /\ fst J X = snd J n) -> 1 <= fst J X - 1 /\ fst J X - 1 = snd J n - 1).
   {
     intros.
     omega.
   }
-  pose proof excluded_middle ((0 <= fst J X /\ fst J X <> 0) /\ fst J X = snd J n).
+  pose proof excluded_middle ((1 <= fst J X /\ fst J X <> 1) /\ fst J X = snd J n).
   tauto.
 Qed.
 
 Fact simple_loop_correct : forall (n : logical_var),
-  |-- {{ 0 <= {[X]} AND {[X]} == n }}
-      While !(X == 0) Do
+  |-- {{ 1 <= {[X]} AND {[X]} == n }}
+      While !(X == 1) Do
         X ::= X - 1
       EndWhile
-      {{ 0 <= {[X]} AND NOT {[! (X == 0)]} }}
+      {{ 1 <= {[X]} AND NOT {[! (X == 1)]} }}
       $ BigO (LINEAR *** CONSTANT) n.
 Proof.
   intros.
