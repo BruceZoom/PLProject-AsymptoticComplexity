@@ -529,6 +529,12 @@ Proof.
     + tauto.
 Qed.
 
+Fact poly_get_last_cons: forall (a h: Z) (t : poly),
+  poly_get_last (a::h::t) = poly_get_last (h::t).
+Proof.
+  intros.
+  simpl. reflexivity.
+Qed.
 
 Fixpoint poly'_get_first (p : poly) : Z := 
   match p with
@@ -796,9 +802,17 @@ Proof.
 Qed.
 
 Fact poly_get_last_in_poly:
-  forall p, p <> nil -> In (poly_get_last p) p.
+  forall (a : Z) p, In (poly_get_last (a::p)) (a::p).
 Proof.
-  intros.
+  intros a p.
+  revert a.
+  induction p.
+  - simpl. left. omega.
+  - intros.
+    pose proof poly_get_last_cons a0 a p.
+    rewrite H.
+    pose proof IHp a.
+
 Admitted.
 
 Lemma poly_distr_coef_compare:
