@@ -372,7 +372,7 @@ Proof.
     split. assert (a2 > 0) as h2'. { omega. }
     assert (Z.of_nat (length p)> 0).
     { pose proof Nat2Z.is_nonneg (length p).
-      
+
       omega.
     }
     pose proof Zmult_gt_0_compat _ _ H1 H2.
@@ -390,9 +390,6 @@ Proof.
       { pose proof poly_eval_mono p (La n).
         rewrite H7.
         pose proof poly_distr_coef_compare (poly_get_max p 0) (Datatypes.length p) (La n).
-        assert (0 = La n \/ 0 < La n). omega.
-        destruct H9.
-        { rewrite <- H9. simpl. 
         pose proof Z.lt_gt _ _ H5 as H5'.
         pose proof H8 H1 H5'.
         clear H8.
@@ -421,13 +418,11 @@ Proof.
           clear H H0 H1 H2 H3 H4 H5 H5' H6 H7 p_gt0 p_nnil FirstPart.
           induction p.
           - simpl. apply nil_le.
-          - assert (length (a :: p) = length (repeat (poly_get_max (a :: p) 0) (Datatypes.length (a :: p)))).
-            { pose proof lem_repeat (Datatypes.length (a :: p)) (poly_get_max (a :: p) 0).
+          - assert (length p = length (repeat (poly_get_max p 0) (Datatypes.length p))).
+            { pose proof lem_repeat (Datatypes.length p) (poly_get_max p 0).
               rewrite H.
               omega.
             }
-            pose proof cons_le. 
-            (* need help here *)
             admit.
          }
          pose proof poly_each_coef_compare p (repeat (poly_get_max p 0) (Datatypes.length p)).
