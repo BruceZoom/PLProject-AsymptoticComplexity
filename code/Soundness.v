@@ -262,7 +262,7 @@ Proof.
     }
   - (* ELSE branch *)
 (**
-  Almost the same as the IF branch, but we will use a1' and a2' to relax minimum and maximum, because they are the onese specified by the command in the ELSE branch.
+  Almost the same as the IF branch, but we will use a1' and a2' to relax minimum and maximum, because they are the ones specified by the command in the ELSE branch.
   We did not write the proof in separate lemma because we can not reuse it, and it would be faster to prove interactively since conditions are too much and too comfusing.
 *)
     pose proof beval_bexp'_denote st1 La b.
@@ -312,6 +312,10 @@ Proof.
     }
 Qed.
 
+(** Proof for hoare_loosen_sound *)
+(**
+  Since other loosen rules are relatively simple, we only breifly illustrate the proof idea behind O_Poly2Mono rule.
+*)
 Lemma hoare_loosen_sound : forall P Q c T1 T2,
   T1 =< T2 ->
   |== {{P}} c {{Q}} $ T1 ->
@@ -322,7 +326,7 @@ Proof.
   destruct H0 as [a1 [a2 [h1 [h2 ?]]]].
 (*  pose proof loosen_valid _ _ H as Hlv.*)
   induction H.
-  (* Theta2Omega *)
+(** Theta2Omega *)
   {
     exists a1, a2.
     intros.
@@ -336,7 +340,7 @@ Proof.
     specialize (H0 H3); clear H2.
     omega.
   }
-  (* Theta2O *)
+(** Theta2O *)
   {
     exists a1, a2.
     intros.
@@ -350,7 +354,12 @@ Proof.
     specialize (H0 H3); clear H2.
     omega.
   }
-  (* O_Poly2Mono *)
+(** O_Poly2Mono *)
+(** The main idea for the proof of this loosen rule is as follows:
+  For arbitrary polynomial of order N - 1, n > 0
+  K = \max{0, a_i} ->
+  \sum_{k=0}^N a_k * n^{k-1} <= \sum_{k=0}^N K * n^{k-1} <= (N * K) * n^{N-1}
+*)
   {
     exists a1.
     exists ((poly_get_max p 0)*(Z.of_nat (length p))*a2). (* set upper bound *)
@@ -412,7 +421,7 @@ Proof.
         rewrite H10 in H8. clear H10. 
         rewrite H8 in H9. clear H8.
         rewrite Z.add_0_l in H9.
-       
+
         (* simplify the result we get *)
         pose proof lem_repeat (Z.to_nat (Z.of_nat (Datatypes.length p) - 1)). 
         rewrite H8 in H9. clear H8.
@@ -427,7 +436,7 @@ Proof.
         apply Z.ge_le in H9.
         rewrite Z.mul_comm in H9.
         rename H9 into FirstPart. (* <-- FirstPart of the Proof *)
-        
+
         (* prove p is term-by-term less than/equal to the loosened result *)
         assert (term_by_term_le p (repeat (poly_get_max p 0) (Datatypes.length p))).
         { unfold term_by_term_le.
@@ -444,7 +453,7 @@ Proof.
               specialize (H z).
               apply H. simpl. auto.
          }
-         
+
          (* second step of loosen => term by term *)
          pose proof poly_each_coef_compare p (repeat (poly_get_max p 0) (Datatypes.length p)).
          pose proof lem_repeat (Datatypes.length p) (poly_get_max p 0).
@@ -455,11 +464,11 @@ Proof.
          assert (0 <= La n). omega.
          pose proof H9 H8. clear H9 H8.
          rename H10 into SecondPart. (* <-- SecondPart of the Proof *)
-         
+
          (* combine the result of the first part and the second part *)
          pose proof Z.le_trans _ _ _ SecondPart FirstPart.
          rename H8 into ThirdPart. (* <-- ThirdPart of the Proof *)
-         
+
          (* third step of loosen => manipulating coefficients *)
          (* if the choice of coef of monomial changes, modify this part *)
          assert (a2 <= a2 * (poly_get_last p)) as FourthPart.
@@ -495,7 +504,7 @@ Proof.
       }
       omega. (* <-- End of the Proof *)
     }
-    (* O_Const *)
+(** O_Const *)
     { exists a1.
       exists (a * a2).
       split. omega.
@@ -545,7 +554,7 @@ Proof.
         }
         omega.
      }
-    (* O_id *)
+(** O_id *)
     { exists a1, a2.
       split. omega.
       split. omega.
@@ -561,7 +570,7 @@ Proof.
         rewrite H in H6.
         exact H6.
     }
-    (* Theta_id *)
+(** Theta_id *)
     { exists a1, a2.
       split. omega.
       split. omega.
@@ -577,7 +586,7 @@ Proof.
         rewrite H in H6.
         exact H6.
     }
-    (* Omega_id *)
+(** Omega_id *)
     { exists a1, a2.
       split. omega.
       split. omega.
@@ -595,11 +604,8 @@ Proof.
     }
 Qed.
 
-Print aexp.
-Print term.
-Print bexp.
-Print Assertion.
 
+(** Lemmas for the soundness proof of while_linear *)
 Lemma nat_plus_eqO : forall (x y : nat),
   plus x y = 0%nat ->
   x = 0%nat /\ y = 0%nat.
@@ -620,7 +626,7 @@ Qed.
 (** update_lassn_sep_term & update_lassn_sep_aexp *)
 (**
   If a logical variable does not occur in a term or aexp, then update its value in logical assignment does not effect the value of the term or aexp.
-  Proved by mutual induction on the structures of the term and aexp respectively.
+  Proved by mutual induction over the structures of the term and aexp respectively.
 *)
 Lemma update_lassn_sep_term : forall La st V n z,
   term_occur n V = O ->
@@ -678,6 +684,11 @@ Proof.
 }
 Qed.
 
+(** update_lassn_sep_bexp *)
+(**
+  If a logical variable does not occur in a bexp, then update its value in logical assignment does not effect the value of the bexp.
+  Proved by induction over the structures of the bexp, with the support of update_lassn_sep_aexp.
+*)
 Lemma update_lassn_sep_bexp : forall La st b n z,
   bexp_occur n b = O ->
   bexp'_denote (st, La) b = bexp'_denote (st, (Lassn_update La n z)) b.
@@ -699,6 +710,11 @@ Proof.
     reflexivity.
 Qed.
 
+(** update_lassn_sep_assn *)
+(**
+  If a logical variable does not occur in a assertion, then update its value in logical assignment does not effect the validness of the assertion under new assignment.
+  Proved by induction over the structures of the assertion. Coq's automation helps reduce the complexity of the proof.
+*)
 Lemma update_lassn_sep_assn : forall La st n z P,
   assn_occur n P = O ->
   (st, La) |== P <-> (st, (Lassn_update La n z)) |== P.
@@ -753,7 +769,9 @@ Proof.
       rewrite <- (satisfies_Interp_Equiv _ _ _ H2).
       exact H0.
 Qed.
+(** [] *)
 
+(** Proof for hoare_while_linear_sound *)
 Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (n : logical_var) (C : Z) c p,
   (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (0 < V))) ->
   assn_occur n P = O ->
@@ -774,29 +792,40 @@ Proof.
   unfold valid in *.
   destruct H0 as [a1 [a2 [h1 [h2 ?]]]].
   simpl in H0.
+(**
+  We reuse the coefficients from the loop body to be those of the entire loop. The main idea of the proof for time complexity is as follows:
+  P(1) <= P(2) <= ... <= P(n) /\ forall n, t(n) <= a2 * P(n) ->
+  T = \sum_k t(k) <= \sum_k a2 * P(k) <= a2 * n * P(n)            (\*\)
+*)
   exists a1, a2.
-  
   split; auto.
   split; auto.
-  
+
   intros.
   simpl in H1, H2.
   destruct H1 as [? ?].
   unfold loop_sem in H2.
   destruct H2 as [n' ?].
-  
+(**
+  The main structure of the proof is to induct over the loop time n'.
+*)
   generalize dependent st1.
   revert La t.
-(*  generalize dependent m.*)
   induction n'; intros.
-  - simpl in H2.
+  -
+(**
+  If n' = 0, the program does not enter the loop, thus the time cost is 0. By the non-negativity or the sign preserving property (3) of the polynomial p, the inequality holds.
+*)
+    simpl in H2.
     destruct H2 as [[? ?] ?].
     split.
-    + simpl.
+    + (* Basic proposition *)
+      simpl.
       subst st2 t.
       pose proof beval_bexp'_denote st1 La b.
       tauto.
-    + subst st2 t.
+    + (* Time complexity *)
+      subst st2 t.
       unfold ab_eval.
       intros.
       rewrite poly_mult_spec, LINEAR_spec.
@@ -804,9 +833,15 @@ Proof.
       split; [omega |].
       apply Z.mul_nonneg_nonneg; [omega |].
       apply Z.mul_nonneg_nonneg; omega.
-  - simpl in H2.
+  -
+(**
+  If n' > 0, use the thoughts in (\*\) to prove the goal. Some details are illustrated below.
+*)
+    simpl in H2.
     destruct H2 as [[t1 [t2 [st3 [? [? ?]]]]] ?].
-
+(**
+  Since the loop has carried out once, the input size should be at least 1. The derivation from loop invariant and loop condition to status of loop variant (1) is used here.
+*)
     assert (0 < La n) as Hn.
     {
       pose proof H st1 La.
@@ -816,19 +851,21 @@ Proof.
       pose proof beval_bexp'_denote st1 La b.
       tauto.
     }
-
+(**
+  Use the condition to obtain propositions after first round of the loop.
+*)
     pose proof beval_bexp'_denote st1 La b.
     assert ((((st1, La) |== P) /\ bexp'_denote (st1, La) b) /\ term_denote (st1, La) V = La n). tauto.
-    (*pose proof H0 La st1 st3 t1 H8 H2.*)
     pose proof H0 La st1 st3 t1 H8 H2; clear H8.
     destruct H9 as [[? ?] ?].
-    
+(**
+  Use the lemmas we proved before to utilize the induction hypothesis to obtain propositions about later rounds of the loop.
+*)
     assert (Lassn_update La n (La n - 1) n = La n - 1) as Hupn.
     {
       unfold Lassn_update.
       destruct (Nat.eq_dec n n); [auto | congruence].
     }
-    
     assert (term_denote (st3, Lassn_update La n (La n - 1)) V = Lassn_update La n (La n - 1) n).
     {
       pose proof update_lassn_sep_term La st3 V n (La n - 1) Hto.
@@ -844,26 +881,35 @@ Proof.
     pose proof IHn' (Lassn_update La n (La n - 1)) t2 st3 H12 H11 H4; clear H11 H12.
     destruct H13.
     split.
-    + destruct H11.
+    + (* Basic proposition *)
+      destruct H11.
       pose proof update_lassn_sep_assn La st2 n (La n - 1) P Hao.
       rewrite <- H14 in H11; clear H14.
       pose proof update_lassn_sep_assn La st2 n (La n - 1) (NOT {[b]}).
       split. exact H11.
       rewrite H14. exact H13.
       simpl. exact Hbo.
-    + pose proof excluded_middle (La n = 1).
+    + (* Time complexity *)
+(**
+  Here we need to discuss the input size case by case again. Because if n = 1, there is no second round of the loop, and we can not relax any time cost term except the one of the first round since we know nothing about other rounds.
+  The excluded_middle axiom is use here.
+*)
+      pose proof excluded_middle (La n = 1).
       destruct H13.
       {
+(**
+  If n <> 1, combined with the status of loop variant we derived before, we have n > 1. By increasingness of the bound, we can relax the time cost based on (\*\) and prove the goal.
+*)
         clear H1 H3 H2 H4 H6 H7 H8 H9 H11.
         unfold ab_eval in H12.
         unfold ab_eval. rewrite Hupn in *.
         intros.
-        
+
         specialize (H10 H1); clear H1.
         assert (0 < La n - 1). omega.
         specialize (H12 H1); clear H1.
         rewrite H5.
-        
+
         split; [omega |].
         rewrite poly_mult_spec, LINEAR_spec in H12.
         rewrite poly_mult_spec, LINEAR_spec.
@@ -896,9 +942,15 @@ Proof.
         exact H7.
       }
       {
+(**
+    If n = 1, the time cost for later rounds, t2, is exactly 0.
+    T = t1 + 0 <= a2 * P(1) <= a2 * 1 * P(1) = a2 * n * P(n)
+    We still need to discuss loop time n' to get some properties.
+*)
         rewrite H13 in *; clear H13.
         destruct n'.
-        + destruct H4 as [[? ?] ?].
+        + (* we want to use the case where no more loop is carried out *)
+          destruct H4 as [[? ?] ?].
           subst. unfold ab_eval; intros.
           specialize (H10 Hn).
           rewrite poly_mult_spec, LINEAR_spec.
@@ -912,7 +964,8 @@ Proof.
             apply Hinc. auto.
           }
           apply (Z.mul_le_mono_nonneg_l (poly_eval p 1) (La n * poly_eval p (La n)) a2) in H5; omega.
-        + destruct H4 as [? ?].
+        + (* by the derivation from loop invariant and loop condition to status of loop variant (1), this case is impossible *)
+          destruct H4 as [? ?].
           rewrite (beval_bexp'_denote st3 La b) in H13.
           assert ((st3, La) |== P AND {[b]}). simpl. tauto.
           pose proof H _ _ H14; clear H14.
@@ -927,6 +980,7 @@ Definition FOL_valid {T: FirstOrderLogic} (P: Assertion): Prop :=
 Definition FOL_sound (T: FirstOrderLogic): Prop :=
   forall P: Assertion, FOL_provable P -> FOL_valid P.
 
+(* Simple proof, no detailed informal proof is required *)
 Theorem hoare_consequence_sound (F: FirstOrderLogic) : forall (P P' Q Q' : Assertion) c (T : AsymptoticBound),
       FOL_sound F ->
       P |-- P' ->
@@ -943,12 +997,12 @@ Proof.
   simpl in H0, H2.
   unfold valid in H1.
   unfold valid.
-  
   destruct H1 as [a1 [a2 [h1 [h2 ?]]]].
+
   exists a1, a2.
   split; auto.
   split; auto.
-  
+
   intros.
   assert ((st1, La) |== P').
   {
@@ -960,6 +1014,10 @@ Proof.
   tauto.
 Qed.
 
+(** hoare_logic_sound *)
+(**
+  The soundness of hoare logic with time complexity is proved by induction over the structure of c, with supports of previous lemmas.
+*)
 Theorem hoare_logic_sound (F: FirstOrderLogic) (TS: FOL_sound F) : forall P Q c T,
   |-- {{P}} c {{Q}} $ T ->
   |== {{P}} c {{Q}} $ T.

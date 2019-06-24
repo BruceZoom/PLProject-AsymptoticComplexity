@@ -141,7 +141,6 @@ Proof.
   intros.
   rename H into Hmo.
   rename H0 into Hno.
-  pose proof hoare_while_linear.
   eapply hoare_consequence.
   apply pre_loop_der.
   2:{ apply post_loop_der. }
@@ -157,11 +156,11 @@ Proof.
   {
     eapply O_const; simpl; omega.
   }
-  eapply hoare_loosen. apply H1. clear H1.
   eapply hoare_loosen. apply H0. clear H0.
+  eapply hoare_loosen. apply H. clear H.
   forward_while_linear.
   - intros.
-    simpl. simpl in H0.
+    simpl. simpl in H.
     omega.
   - simpl.
     destruct (Nat.eq_dec o m); [congruence |].
@@ -185,7 +184,7 @@ Proof.
       ring.
     }
     eapply hoare_loosen.
-    apply H0. clear H0.
+    apply H. clear H.
     eapply hoare_seq_bigtheta.
     2:{
       eapply hoare_seq_bigtheta.
