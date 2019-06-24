@@ -627,11 +627,11 @@ Proof.
 Qed.
 
 Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (n : logical_var) (C : Z) c p,
-  (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (1 < V))) ->
+  (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (0 < V))) ->
   assn_occur n P = O ->
   term_occur n V = O ->
   bexp_occur n b = O ->
-  (forall x, 0 < x -> 0 < poly_eval p x) ->
+  (forall x, 0 < x -> 0 <= poly_eval p x) ->
   (forall x y, x <= y -> poly_eval p x <= poly_eval p y) ->
   |== {{P AND {[b]} AND V == n}} c {{P AND V == n-1}} $ BigO p n ->
   |== {{P AND V == n }} While b Do c EndWhile {{ P AND NOT {[b]} }} $ BigO (LINEAR *** p) n.
@@ -679,7 +679,7 @@ Proof.
   - simpl in H2.
     destruct H2 as [[t1 [t2 [st3 [? [? ?]]]]] ?].
 
-    assert (1 < La n) as Hn.
+    assert (0 < La n) as Hn.
     {
       pose proof H st1 La.
       simpl in H7.
@@ -723,46 +723,74 @@ Proof.
       split. exact H11.
       rewrite H14. exact H13.
       simpl. exact Hbo.
-    + clear H1 H3 H2 H4 H6 H7 H8 H9 H11.
-      unfold ab_eval in H12.
-      unfold ab_eval. rewrite Hupn in *.
-      intros.
-      
-      specialize (H10 H1); clear H1.
-      assert (0 < La n - 1). omega.
-      specialize (H12 H1); clear H1.
-      rewrite H5.
-      
-      split; [omega |].
-      rewrite poly_mult_spec, LINEAR_spec in H12.
-      rewrite poly_mult_spec, LINEAR_spec.
-      assert ((La n - 1) <= (La n)). omega.
-      pose proof Hinc (La n - 1) (La n) H1.
-      assert (t2 <= a2 * ((La n - 1) * poly_eval p (La n))).
+    + pose proof excluded_middle (La n = 1).
+      destruct H13.
       {
-        assert ((La n - 1) * poly_eval p (La n - 1) <= (La n - 1) * poly_eval p (La n)).
+        clear H1 H3 H2 H4 H6 H7 H8 H9 H11.
+        unfold ab_eval in H12.
+        unfold ab_eval. rewrite Hupn in *.
+        intros.
+        
+        specialize (H10 H1); clear H1.
+        assert (0 < La n - 1). omega.
+        specialize (H12 H1); clear H1.
+        rewrite H5.
+        
+        split; [omega |].
+        rewrite poly_mult_spec, LINEAR_spec in H12.
+        rewrite poly_mult_spec, LINEAR_spec.
+        assert ((La n - 1) <= (La n)). omega.
+        pose proof Hinc (La n - 1) (La n) H1.
+        assert (t2 <= a2 * ((La n - 1) * poly_eval p (La n))).
         {
-          assert (0 <= La n - 1). omega.
-          apply Z.mul_le_mono_nonneg_l.
-          exact H3. exact H2.
+          assert ((La n - 1) * poly_eval p (La n - 1) <= (La n - 1) * poly_eval p (La n)).
+          {
+            assert (0 <= La n - 1). omega.
+            apply Z.mul_le_mono_nonneg_l.
+            exact H3. exact H2.
+          }
+          eapply Z.le_trans.
+          2:{
+            apply Z.mul_le_mono_nonneg_l. omega.
+            apply H3.
+          }
+          omega.
         }
-        eapply Z.le_trans.
-        2:{
-          apply Z.mul_le_mono_nonneg_l. omega.
-          apply H3.
-        }
-        omega.
+        destruct H10.
+        pose proof Z.add_le_mono _ _ _ _ H6 H3.
+        rewrite Z.mul_assoc.
+        rewrite Z.mul_assoc in H7.
+        assert (La n = 1 + (La n - 1)). omega.
+        rewrite H8 at 1; clear H8.
+        rewrite Z.mul_add_distr_l.
+        rewrite Z.mul_add_distr_r.
+        rewrite Z.mul_1_r.
+        exact H7.
       }
-      destruct H10.
-      pose proof Z.add_le_mono _ _ _ _ H6 H3.
-      rewrite Z.mul_assoc.
-      rewrite Z.mul_assoc in H7.
-      assert (La n = 1 + (La n - 1)). omega.
-      rewrite H8 at 1; clear H8.
-      rewrite Z.mul_add_distr_l.
-      rewrite Z.mul_add_distr_r.
-      rewrite Z.mul_1_r.
-      exact H7.
+      {
+        rewrite H13 in *; clear H13.
+        destruct n'.
+        + destruct H4 as [[? ?] ?].
+          subst. unfold ab_eval; intros.
+          specialize (H10 Hn).
+          rewrite poly_mult_spec, LINEAR_spec.
+          assert (poly_eval p 1 <= La n * poly_eval p (La n)).
+          {
+            assert (1 <= La n). omega.
+            assert (poly_eval p 1 = 1 * poly_eval p 1). ring.
+            rewrite H13; clear H13.
+            apply Z.mul_le_mono_nonneg; try omega.
+            apply Hpre. omega.
+            apply Hinc. auto.
+          }
+          apply (Z.mul_le_mono_nonneg_l (poly_eval p 1) (La n * poly_eval p (La n)) a2) in H5; omega.
+        + destruct H4 as [? ?].
+          rewrite (beval_bexp'_denote st3 La b) in H13.
+          assert ((st3, La) |== P AND {[b]}). simpl. tauto.
+          pose proof H _ _ H14; clear H14.
+          simpl in H15. rewrite H9 in H15.
+          inversion H15.
+      }
 Qed.
 
 Definition FOL_valid {T: FirstOrderLogic} (P: Assertion): Prop :=
