@@ -90,9 +90,9 @@ Please compile the project in the following order:
 - seq_sem (at line 20)
   - The same as the one in class. 
 - if_sem (at line 27)
-  - The same as the one in class. 
+  - Almost the same as the one in class, but we move the time step property outside. 
 - loop_sem (at line 53)
-  - The same as the one in class. 
+  - Almost the same as the one in class, but we move the time step property outside. 
 - ceval (at line 59)
   - The same as the one in class. 
 ### __Hoare Logic__ (in HoareLogic.v)
@@ -114,14 +114,16 @@ There are many properties about _poly_ we have proven to support later use of it
   - Stating that the evaluation of poly_scalar_mult result is correct.
 - __poly_mult_spec__ (at ___line 191___)
   - Stating that the evaluation of poly_mult result is correct.
-- __trim_invar__ (at ___line 205___)
-  - Stating that after trimming redundant 0s, the evaluation is the same as before.
+- ~~__trim_invar__ (at ___line 205___)~~
+  - ~~Stating that after trimming redundant 0s, the evaluation is the same as before.~~
 
 ### __Denotation__ (in Denotation.v)
-- __command_cost_time__ (at ___line 68___)
+- ~~__command_cost_time__ (at ___line 68___)~~
   - Stating that any command would cost at least 1 time step.
-  - Apply to the denotational semantics, where Skip also cost 1 time step.
-  - This property is important in proving the hoare_if_same_soundness, because previously having Skip inside if statement would invalidate that rule, since unfolding if also takes time.
+  - ~~Apply to the denotational semantics, where Skip also cost 1 time step.~~
+  - ~~This property is important in proving the hoare_if_same_soundness, because previously having Skip inside if statement would invalidate that rule, since unfolding if also takes time.~~
+- __Expanding If and While does not cost time__
+  - Instead of specify that all command cost at least 1 time step, we specify that expanding If and While statements does not cost time, because analysis of time complexity of algorithms barely counts time spent on unrolling those two statements.
 
 ### __Soundness__ (in Soundness.v)
 All the Hoare Rules contain the part we have declared in class, thus we will not mention those again.
@@ -136,17 +138,22 @@ All the Hoare Rules contain the part we have declared in class, thus we will not
 - __hoare_loosen_sound__ (at ___line 307___)
   - Stating that we can __relax__ the time complexity of certain command based on the _loosen_ relation.
   - Auxiliary properties about _poly_ is required to prove the loosening rule for asymptotic bounds that have the same highest order.
-- __hoare_while_linear__ (at ___line 354___)
+- __hoare_while_linear_sound__ (at ___line 354___)
   - Stating that if the loop variant decrease linearly, by __multiplying__ a linear term onto the asymptotic bound for the inner command, we get the time complexity for the whole loop.
   - We have just reached the stage to come up with Hoare While Rules, thus this rule requires certain revision and generalization.
+- hoare_consequence_sound (at ___line x___)
+  - Stating that consequence rule holds for the Hoare logic, if time complexity stays unchanged.
 - hoare_logic_sound (at ___line 361___)
   - Stating that if a Hoare Triple is provable, then it is valid.
 
 ### __Demos__ (in Demos.v)
+- __simple_loop__ (at __line x__)
+  - This is a simple example to test the usage of Hoare rule for while loop, which slowly decreases X to 0.
 - __slow_addition_correct__ (at ___line 13___)
   - This example comes from the Exercise 2 of Task 2 in Assignment 2.
-  - We want to prove that its time complexity is $\Theta(m)$.
-- __min_while_correct__ (at ___line 33___)
+  - We want to prove that its time complexity is $O(m)$.
+  - Due to the requirement in while rule, extra conditions are required for the logical_var bound to the loop variant.
+- ~~__min_while_correct__ (at ___line 33___)~~ _We did not have time to prove this._
   - This example comes from the Exercise 3 of Task 4 in Assignment 2.
   - We want to prove that its time complexity is $O(\min(a, b))$.
   - Since we try to prove something that is not a polynomial, a minimum function, using polynomial asymptotic bound, we might get stuck and might change this to something simpler.
