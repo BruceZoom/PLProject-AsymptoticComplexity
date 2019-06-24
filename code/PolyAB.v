@@ -1067,11 +1067,11 @@ Inductive AsymptoticBound : Type :=
 
 Definition ab_eval (La : Lassn) (T : AsymptoticBound) (a1 a2 t : Z) : Prop :=
   match T with
-  | BigO p n => 0 <= La n ->
+  | BigO p n => 0 < La n ->
                 0 <= t <= a2 * (poly_eval p (La n))
-  | BigOmega p n => 0 <= La n ->
+  | BigOmega p n => 0 < La n ->
                     0 <= a1 * (poly_eval p (La n)) <= t
-  | BigTheta p n => 0 <= La n ->
+  | BigTheta p n => 0 < La n ->
                     0 <= a1 * (poly_eval p (La n)) <= t /\ t <= a2 * (poly_eval p (La n))
   end.
 

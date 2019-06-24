@@ -340,38 +340,136 @@ Proof.
     (* TODO: Fill in here *)
     exists a1.
     exists ((poly_get_max p 0)*(Z.of_nat (length p))*a2).
-    split. omega.
-    split. assert (a2 > 0) as h2'. { omega. }
-    assert (poly_get_max p (poly_get_last p) > 0).
-    { pose proof poly_get_max_spec p (poly_get_last p). 
-      pose proof Z.lt_le_trans _ _ _ H H1. 
+    assert (forall (N:nat) (z:Z), (Datatypes.length (repeat z N)) = N) as lem_repeat.
+    { intros. simpl.
+      induction N.
+      - simpl. reflexivity.
+      - simpl. rewrite IHN. reflexivity.
+    }
+    assert (length p <> 0)%nat as p_gt0.
+    { unfold not. intros.
+      apply length_zero_iff_nil in H1.
+      subst. simpl in H. 
       omega.
     }
+    assert (p <> nil) as p_nnil.
+    { unfold not. intros.
+      subst. simpl in H.
+      omega.
+    }
+    assert (poly_get_max p 0 > 0).
+    { pose proof poly_get_max3 p (poly_get_last p).
+      destruct p.
+      - simpl in H. omega.
+      - pose proof poly_get_last_in_poly z p.
+        pose proof H1 H2.
+        pose proof Z.lt_le_trans _ _ _ H H3.
+        omega.
+    }
+    split. omega.
+    split. assert (a2 > 0) as h2'. { omega. }
     assert (Z.of_nat (length p)> 0).
     { pose proof Nat2Z.is_nonneg (length p).
-      assert (length p <> 0)%nat.
-      { unfold not. intros.
-        apply length_zero_iff_nil in H3.
-        subst. simpl in H. 
-        omega.
-      }
+      
       omega.
     }
     pose proof Zmult_gt_0_compat _ _ H1 H2.
     pose proof Zmult_gt_0_compat _ _ H3 h2'.
-    omega.
+    apply Z.gt_lt in H4.
+    exact H4.
 
     intros.
-    specialize (H0 La st1 st2 t H1 H2). destruct H0.
+    specialize (H0 La st1 st2 t H2 H3). destruct H0.
     split.
     - tauto.
     - simpl. intros. 
-      simpl in H3. pose proof H3 H4.
-      assert (a2 * poly_eval p (La n) <= poly_get_max p (poly_get_last p) * (Z.of_nat (Datatypes.length p)) * a2 * poly_eval (poly_monomialize p) (La n)).
+      simpl in H4. pose proof H4 H5.
+      assert (a2 * poly_eval p (La n) <= poly_get_max p 0 * (Z.of_nat (Datatypes.length p)) * a2 * poly_eval (poly_monomialize p) (La n)).
       { pose proof poly_eval_mono p (La n).
-        rewrite H6.
-      
-  }
+        rewrite H7.
+        pose proof poly_distr_coef_compare (poly_get_max p 0) (Datatypes.length p) (La n).
+        pose proof Z.lt_gt _ _ H5 as H5'.
+        pose proof H8 H1 H5'.
+        clear H8.
+        pose proof poly_eval_app (repeat 0 (Z.to_nat (Z.of_nat (Datatypes.length p) - 1))) (poly_get_max p 0 * Z.of_nat (Datatypes.length p) :: nil) (La n).
+        pose proof poly_eval_zero (Z.to_nat (Z.of_nat (Datatypes.length p) - 1)) (La n).
+        rewrite H10 in H8. clear H10. 
+        rewrite H8 in H9. clear H8.
+        rewrite Z.add_0_l in H9.
+       
+        pose proof lem_repeat (Z.to_nat (Z.of_nat (Datatypes.length p) - 1)).
+        rewrite H8 in H9. clear H8.
+        pose proof Z2Nat.id (Z.of_nat (Datatypes.length p) - 1).
+        assert (0 <= Z.of_nat (Datatypes.length p) - 1).
+        { omega. }
+        pose proof H8 H10. clear H8 H10.
+        rewrite H11 in H9. clear H11.
+        assert (poly_eval (poly_get_max p 0 * Z.of_nat (Datatypes.length p) :: nil) (La n) = poly_get_max p 0 * Z.of_nat (Datatypes.length p)).
+        { simpl. omega. }
+        rewrite H8 in H9. clear H8.
+        apply Z.ge_le in H9.
+        rewrite Z.mul_comm in H9.
+        rename H9 into FirstPart.
+        
+        assert (term_by_term_le p (repeat (poly_get_max p 0) (Datatypes.length p))).
+        { unfold term_by_term_le.
+          clear H H0 H1 H2 H3 H4 H5 H5' H6 H7 p_gt0 p_nnil FirstPart.
+          induction p.
+          - simpl. apply nil_le.
+          - assert (length (a :: p) = length (repeat (poly_get_max (a :: p) 0) (Datatypes.length (a :: p)))).
+            { pose proof lem_repeat (Datatypes.length (a :: p)) (poly_get_max (a :: p) 0).
+              rewrite H.
+              omega.
+            }
+            pose proof cons_le. 
+            (* need help here *)
+            admit.
+         }
+         pose proof poly_each_coef_compare p (repeat (poly_get_max p 0) (Datatypes.length p)).
+         pose proof lem_repeat (Datatypes.length p) (poly_get_max p 0).
+         apply eq_sym in H10.
+         pose proof H9 H10. clear H9 H10.
+         pose proof H11 H8. clear H11 H8.
+         specialize (H9 (La n)).
+         assert (0 <= La n). omega.
+         pose proof H9 H8. clear H9 H8.
+         rename H10 into SecondPart.
+         
+         pose proof Z.le_trans _ _ _ SecondPart FirstPart.
+         rename H8 into ThirdPart.
+         
+         assert (a2 <= a2 * (poly_get_last p)) as FourthPart.
+         { assert (1 <= poly_get_last p). omega.
+           pose proof Z.mul_le_mono_nonneg 1 (poly_get_last p) a2 a2.
+           assert (0 <= 1). omega.
+           assert (0 <= a2). omega.
+           assert (a2 <= a2). omega.
+           pose proof H9 H10 H8 H11 H12.
+           rewrite Z.mul_1_l in H13.
+           rewrite Z.mul_comm in H13.
+           exact H13.
+         }
+         pose proof Z.mul_le_mono_nonneg a2 (a2 * (poly_get_last p)) (poly_eval p (La n)) (poly_get_max p 0 * Z.of_nat (Datatypes.length p) * La n ^ (Z.of_nat (Datatypes.length p) - 1)).
+         assert (0 <= a2). omega.
+         pose proof H8 H9 FourthPart.
+         assert (0 <= poly_eval p (La n)).
+         { pose proof Zmult_le_0_reg_r a2 (poly_eval p (La n)).
+           assert (a2 > 0). omega.
+           pose proof H11 H12.
+           rewrite Z.mul_comm in H13.
+           assert (0 <= a2 * poly_eval p (La n)). omega.
+           pose proof H13 H14.
+           exact H15.
+         }
+         pose proof H10 H11.
+         pose proof H12 ThirdPart.
+         assert (a2 * poly_get_last p * (poly_get_max p 0 * Z.of_nat (Datatypes.length p) * La n ^ (Z.of_nat (Datatypes.length p) - 1)) = poly_get_max p 0 * Z.of_nat (Datatypes.length p) * a2 * (poly_get_last p * La n ^ (Z.of_nat (Datatypes.length p) - 1))).
+         ring.
+         rewrite H14 in H13. clear H14.
+         rename H13 into final.
+         exact final.
+      }
+      omega.
 Admitted.
 
 Print aexp.
