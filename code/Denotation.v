@@ -25,12 +25,16 @@ Definition seq_sem (d1 d2: state -> Z -> state -> Prop)
     exists t1 t2 st2,
       d1 st1 t1 st2 /\ d2 st2 t2 st3 /\ t = t1 + t2.
 
+(* Originally the time step is t + 1, we change it to t *)
+
 Definition if_sem (b: bexp) (d1 d2: state -> Z -> state -> Prop)
   : state -> Z -> state -> Prop
 :=
   fun st1 t st2 =>
     (d1 st1 t st2 /\ beval b st1) \/
     (d2 st1 t st2 /\ ~beval b st1).                 (* <-- modified *)
+
+(* Originally the time step for the base case is 1, we change it to 0 *)
 
 Fixpoint iter_loop_body
   (b: bexp)

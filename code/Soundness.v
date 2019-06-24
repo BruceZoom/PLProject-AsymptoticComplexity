@@ -25,12 +25,13 @@ Notation "|==  Tr" := (valid Tr) (at level 91, no associativity).
 
 (** Soundness Proof *)
 
+(* Simple proof, no detailed informal proof is required *)
 Lemma hoare_skip_sound : forall P n,
   |== {{P}} Skip {{P}} $ BigTheta CONSTANT n.
 Proof.
   unfold valid.
-  exists 1, 1.
   
+  exists 1, 1.
   split. omega.
   split. omega.
   
@@ -40,10 +41,12 @@ Proof.
   destruct H0.
   split.
   {
+    (* Basic proposition *)
     rewrite <- H0.
     exact H.
   }
   {
+    (* Time complexity *)
     unfold ab_eval.
     intros.
     rewrite CONSTANT_spec.
@@ -58,12 +61,13 @@ Lemma Assertion_sub_spec: forall st1 st2 La (P: Assertion) (X: var) (E: aexp'),
 Proof.
 Admitted.
 
+(* Simple proof, no detailed informal proof is required *)
 Lemma hoare_asgn_bwd_sound : forall P (X: var) (E: aexp) n,
   |== {{ P [ X |-> E] }} X ::= E {{ P }} $ BigTheta CONSTANT n.
 Proof.
   unfold valid.
-  exists 1, 1.
   
+  exists 1, 1.
   split. omega.
   split. omega.
   
@@ -72,12 +76,14 @@ Proof.
   destruct H0, H1.
   split.
   {
+    (* Basic proposition *)
     pose proof aeval_aexp'_denote st1 La E.
     rewrite H3 in H0.
     pose proof Assertion_sub_spec st1 st2 _ P _ _ H0 H1.
     tauto.
   }
   {
+    (* Time complexity *)
     intros.
     unfold ab_eval.
     rewrite CONSTANT_spec.
@@ -85,6 +91,7 @@ Proof.
   }
 Qed.
 
+(** Proof for hoare_seq_bigtheta_sound *)
 Lemma hoare_seq_bigtheta_sound : forall (P Q R: Assertion) (c1 c2: com) (p1 p2 : poly) (n : logical_var),
   |== {{P}} c1 {{Q}} $ BigTheta p1 n ->
   |== {{Q}} c2 {{R}} $ BigTheta p2 n ->
@@ -95,8 +102,18 @@ Proof.
   destruct H as [a1 [a2 [h1 [h2 ?]]]].
   destruct H0 as [a1' [a2' [h1' [h2' ?]]]].
   simpl in *.
+(**
+  The coefficient for the lower bound is the minimum of original lower bound coeffcients. The coefficient for the upper bound is the maximum of original upper bound coeffcients. The main idea is as follows:
+  a1 * P1(n) <= t1 <= a2 * P1(n) /\ a1' * P2(n) <= t2 <= a2' * P2(n) ->
+  min(a1, a1') * (P1(n) + P2(n))
+      = min(a1 * P1(n), a1' * P1(n)) + min(a1 * P2(n), a1' * P2(n))
+      <= a1 * P1(n) + a1' * P2(n)           <-- By condition
+  <= t1 + t2
+      <= a2 * P1(n) + a2' * P2(n)           <-- By condition
+      <= max(a2 * P1(n), a2' * P1(n)) + min(a2 * P2(n), a2' * P2(n))
+  = max(a2, a2') * (P1(n) + P2(n))
+*)
   exists (Z.min a1 a1'), (Z.max a2 a2').
-  
   split. apply (Z.min_glb_lt _ _ _ h1 h1').
   split. pose proof Z.le_max_l a2 a2'. omega.
   
@@ -107,17 +124,12 @@ Proof.
   specialize (H0 _ _ _ _ H H3) as [? ?].
   split.
   {
+    (* Basic proposition *)
     exact H0.
   }
   {
+    (* Time complexity *)
     intros.
-    (*
-    pose proof Z.max_lub_l _ _ _ H7;
-    pose proof Z.max_lub_r _ _ _ H7;
-    clear H7.
-    specialize (H5 H8); clear H8.
-    specialize (H6 H9); clear H9.
-    *)
     specialize (H5 H7);
     specialize (H6 H7);
     clear H7.
@@ -125,7 +137,8 @@ Proof.
     destruct H5, H6.
     remember H4 as H5; clear HeqH5 H4.
     destruct H, H1.
-    
+
+    (* prepare propositions *)
     remember (poly_eval p1 (La n)) as T1.
     remember (poly_eval p2 (La n)) as T2.
     pose proof H as H'.
@@ -134,7 +147,9 @@ Proof.
     rewrite (Z.mul_nonneg_cancel_l _ _ h1') in H1'.
     assert (0 <= a1' * T1). apply Z.mul_nonneg_nonneg; omega.
     assert (0 <= a1 * T2). apply Z.mul_nonneg_nonneg; omega.
-    
+(**
+  Move the multiplier, i.e. the results of polynomial evaluations, inside the _min_ and _max_, and by the upper and lower bounds of each term, we can get the total of upper and lower bounds. By relaxing the minimum and maximum to one of the operands, we can proof the inequality.
+*)
     split.
     - rewrite poly_add_spec, Z.mul_add_distr_l.
       rewrite <- HeqT1. rewrite <- HeqT2.
@@ -159,6 +174,7 @@ Proof.
   }
 Qed.
 
+(* Proof for hoare_if_same_sound *)
 Lemma hoare_if_same_sound : forall P Q (b: bexp) c1 c2 T,
   |== {{ P AND {[b]} }} c1 {{ Q }} $ T ->
   |== {{ P AND NOT {[b]} }} c2 {{ Q }} $ T ->
@@ -169,38 +185,51 @@ Proof.
   destruct H as [a1 [a2 [h1 [h2 ?]]]].
   destruct H0 as [a1' [a2' [h1' [h2' ?]]]].
   simpl in *.
-  exists (Z.min a1 a1'), (2 * (Z.max a2 a2')).
-  
+(**
+  Again, the coefficient for the lower bound is the minimum of original lower bound coeffcients. The coefficient for the upper bound is the maximum of original upper bound coeffcients. Taking BigTheta case in IF branch for example:
+  1) 0 <= a1 * P(n) /\ 0 <= a1' * P(n) ->
+     0 <= min(a1 * P(n), a1' * P(n)) = min(a1, a1') * P(n)
+  2) min(a1, a1') * P(n)
+        = min(a1 * P(n), a1' * P(n))
+        <= a1 * P(n)                <-- By condition
+     <= t
+        <= a2 * P(n)                <-- By condition
+        <= max(a2 * P(n), a2' * P(n))
+     = max(a2, a2') * P(n)
+*)
+  exists (Z.min a1 a1'), (Z.max a2 a2').
   split. apply (Z.min_glb_lt _ _ _ h1 h1').
   split. pose proof Z.le_max_l a2 a2'. omega.
-  
+
   intros.
   unfold if_sem in H2.
   destruct H2 as [[? ?] | [? ?]].
-  - (* if branch *)
+  - (* IF branch *)
     pose proof beval_bexp'_denote st1 La b.
     pose proof H La st1 st2 t.
     split.
     {
+      (* Basic proposition *)
       tauto.
     }
     {
+      (* Time complexity *)
       assert (ab_eval La T a1 a2 t) as HAB. tauto.
-(*      pose proof command_cost_time _ _ _ _ H2 as HT.*)
       clear H H0 H1 H2 H3 H4 H5.
       destruct T;
       unfold ab_eval in *;
       intros;
       remember (poly_eval p (La l)) as T.
       - (* BigO *)
+        (* This branch reoccurs in BigTheta *)
         pose proof HAB H as [? ?].
         assert (0 <= a2 * T). omega.
         rewrite (Z.mul_nonneg_cancel_l _ _ h2) in H2.
-        rewrite <- Z.mul_assoc.
         rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H2).
         pose proof Z.le_max_l (a2 * T) (a2' * T).
         omega.
       - (* BigOmega *)
+        (* This branch reoccurs in BigTheta *)
         pose proof HAB H as [? ?].
         pose proof H0.
         rewrite (Z.mul_nonneg_cancel_l _ _ h1) in H2.
@@ -210,33 +239,32 @@ Proof.
         pose proof Z.min_glb _ _ _ H0 H4.
         omega.
       - (* BigTheta *)
+(**
+  Prepare propositions and moves the multipliers inside the minimum and maximum signs.
+*)
         pose proof HAB H as [[? ?] ?].
         pose proof H0.
         rewrite (Z.mul_nonneg_cancel_l _ _ h1) in H3.
         rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H3).
-        rewrite <- Z.mul_assoc.
         rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H3).
         assert (0 <= a1' * T). apply Z.mul_nonneg_nonneg; omega.
         assert (0 <= a1 * T). apply Z.mul_nonneg_nonneg; omega.
         clear H3.
+(**
+  Relax the minimum and maximum to one of the operands, which uses a1 and a2 since they are specified by the command in the IF branch, and prove the inequality.
+*)
         split.
         + pose proof Z.le_min_l (a1 * T) (a1' * T).
           pose proof Z.min_glb _ _ _ H5 H4.
           omega.
         + pose proof Z.le_max_l (a2 * T) (a2' * T).
-(*
-          assert (t <= 2 * t - 2).
-          {
-            rewrite <- Z.add_diag.
-            rewrite <- Z.add_sub_assoc.
-            rewrite <- Z.add_0_r at 1.
-            apply Zplus_le_compat_l.
-            omega.
-          }
-*)
           omega.
     }
-  - (* else branch *)
+  - (* ELSE branch *)
+(**
+  Almost the same as the IF branch, but we will use a1' and a2' to relax minimum and maximum, because they are the onese specified by the command in the ELSE branch.
+  We did not write the proof in separate lemma because we can not reuse it, and it would be faster to prove interactively since conditions are too much and too comfusing.
+*)
     pose proof beval_bexp'_denote st1 La b.
     pose proof H0 La st1 st2 t.
     split.
@@ -245,7 +273,6 @@ Proof.
     }
     {
       assert (ab_eval La T a1' a2' t) as HAB. tauto.
-(*      pose proof command_cost_time _ _ _ _ H2 as HT.*)
       clear H H0 H1 H2 H3 H4 H5.
       destruct T;
       unfold ab_eval in *;
@@ -255,7 +282,6 @@ Proof.
         pose proof HAB H as [? ?].
         assert (0 <= a2' * T). omega.
         rewrite (Z.mul_nonneg_cancel_l _ _ h2') in H2.
-        rewrite <- Z.mul_assoc.
         rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H2).
         pose proof Z.le_max_r (a2 * T) (a2' * T).
         omega.
@@ -273,7 +299,6 @@ Proof.
         pose proof H0.
         rewrite (Z.mul_nonneg_cancel_l _ _ h1') in H3.
         rewrite <- (Z.mul_min_distr_nonneg_r _ _ _ H3).
-        rewrite <- Z.mul_assoc.
         rewrite <- (Z.mul_max_distr_nonneg_r _ _ _ H3).
         assert (0 <= a1' * T). apply Z.mul_nonneg_nonneg; omega.
         assert (0 <= a1 * T). apply Z.mul_nonneg_nonneg; omega.
@@ -283,16 +308,6 @@ Proof.
           pose proof Z.min_glb _ _ _ H5 H4.
           omega.
         + pose proof Z.le_max_r (a2 * T) (a2' * T).
-(*
-          assert (t <= 2 * t - 2).
-          {
-            rewrite <- Z.add_diag.
-            rewrite <- Z.add_sub_assoc.
-            rewrite <- Z.add_0_r at 1.
-            apply Zplus_le_compat_l.
-            omega.
-          }
-*)
           omega.
     }
 Qed.
@@ -480,54 +495,6 @@ Proof.
       }
       omega. (* <-- End of the Proof *)
     }
-    (* O_id *)
-    { exists a1, a2.
-      split. omega.
-      split. omega.
-      intros. 
-      specialize (H0 La st1 st2 t).
-      pose proof H0 H1 H2.
-      destruct H3.
-      split.
-      - tauto.
-      - simpl. simpl in H4.
-        intros. pose proof H4 H5.
-        specialize (H (La n)).
-        rewrite H in H6.
-        exact H6.
-    }
-    (* Theta_id *)
-    { exists a1, a2.
-      split. omega.
-      split. omega.
-      intros. 
-      specialize (H0 La st1 st2 t).
-      pose proof H0 H1 H2.
-      destruct H3.
-      split.
-      - tauto.
-      - simpl. simpl in H4.
-        intros. pose proof H4 H5.
-        specialize (H (La n)).
-        rewrite H in H6.
-        exact H6.
-    }
-    (* Omega_id *)
-    { exists a1, a2.
-      split. omega.
-      split. omega.
-      intros. 
-      specialize (H0 La st1 st2 t).
-      pose proof H0 H1 H2.
-      destruct H3.
-      split.
-      - tauto.
-      - simpl. simpl in H4.
-        intros. pose proof H4 H5.
-        specialize (H (La n)).
-        rewrite H in H6.
-        exact H6.
-    }
     (* O_Const *)
     { exists a1.
       exists (a * a2).
@@ -578,6 +545,54 @@ Proof.
         }
         omega.
      }
+    (* O_id *)
+    { exists a1, a2.
+      split. omega.
+      split. omega.
+      intros. 
+      specialize (H0 La st1 st2 t).
+      pose proof H0 H1 H2.
+      destruct H3.
+      split.
+      - tauto.
+      - simpl. simpl in H4.
+        intros. pose proof H4 H5.
+        specialize (H (La n)).
+        rewrite H in H6.
+        exact H6.
+    }
+    (* Theta_id *)
+    { exists a1, a2.
+      split. omega.
+      split. omega.
+      intros. 
+      specialize (H0 La st1 st2 t).
+      pose proof H0 H1 H2.
+      destruct H3.
+      split.
+      - tauto.
+      - simpl. simpl in H4.
+        intros. pose proof H4 H5.
+        specialize (H (La n)).
+        rewrite H in H6.
+        exact H6.
+    }
+    (* Omega_id *)
+    { exists a1, a2.
+      split. omega.
+      split. omega.
+      intros. 
+      specialize (H0 La st1 st2 t).
+      pose proof H0 H1 H2.
+      destruct H3.
+      split.
+      - tauto.
+      - simpl. simpl in H4.
+        intros. pose proof H4 H5.
+        specialize (H (La n)).
+        rewrite H in H6.
+        exact H6.
+    }
 Qed.
 
 Print aexp.
@@ -602,6 +617,11 @@ Proof.
   destruct (Nat.eq_dec y x); [congruence | auto].
 Qed.
 
+(** update_lassn_sep_term & update_lassn_sep_aexp *)
+(**
+  If a logical variable does not occur in a term or aexp, then update its value in logical assignment does not effect the value of the term or aexp.
+  Proved by mutual induction on the structures of the term and aexp respectively.
+*)
 Lemma update_lassn_sep_term : forall La st V n z,
   term_occur n V = O ->
   term_denote (st, La) V = term_denote (st, (Lassn_update La n z)) V

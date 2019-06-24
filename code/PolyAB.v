@@ -1104,6 +1104,7 @@ Inductive AsymptoticBound : Type :=
   | BigOmega : poly -> logical_var -> AsymptoticBound
   | BigTheta : poly -> logical_var -> AsymptoticBound.
 
+(* Convert asymtotic bounds to corresponding inequalities. We do not consider input with nonpositive size *)
 Definition ab_eval (La : Lassn) (T : AsymptoticBound) (a1 a2 t : Z) : Prop :=
   match T with
   | BigO p n => 0 < La n ->
@@ -1116,22 +1117,24 @@ Definition ab_eval (La : Lassn) (T : AsymptoticBound) (a1 a2 t : Z) : Prop :=
 
 Reserved Notation "T1 '=<' T2" (at level 50, no associativity).
 
+(* loosen relationship defines equivalence between bounds *)
 Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
+  (* If time is bounded by Theta, it is bounded by O and Omega *)
   | Theta2Omega : forall p n, 0 < poly_get_last p -> BigTheta p n =< BigOmega p n
   | Theta2O : forall p n, 0 < poly_get_last p -> BigTheta p n =< BigO p n
-  (* | HighestEquivO : forall p1 p2 n,
-                      0 < poly_coef_sum p1 ->
-                      0 < poly_coef_sum p2 ->
-                      length p1 = length p2 ->
-                      BigO p1 n =< BigO p2 n*)
+
+  (* We can relax the bound to a monomial with the same highest order term *)
   | O_Poly2Mono : forall p n, 0 < poly_get_last p -> BigO p n =< BigO (poly_monomialize p) n
+  (* TODO: a monomial should also be able to be relaxed to polynomial with same highest order, but we did not have time to prove its soundness, thus it is not included yet *)
+
+  (* Multiplying positive constant to a bound can obtain another valid bound *)
+  | O_const : forall p a b n, 0 < a -> 0 < b ->  0 < poly_get_last p -> BigO (a ** p) n =< BigO (b ** p) n
+
+  (* A polynomial can have different forms, if they always evaulate to the same value, then bounds defined by them are equivalent *)
   | O_id : forall p1 p2 n, (forall z, poly_eval p1 z = poly_eval p2 z) -> BigO p1 n =< BigO p2 n
   | Theta_id : forall p1 p2 n, (forall z, poly_eval p1 z = poly_eval p2 z) -> BigTheta p1 n =< BigTheta p2 n
   | Omega_id : forall p1 p2 n, (forall z, poly_eval p1 z = poly_eval p2 z) -> BigOmega p1 n =< BigOmega p2 n
-  | O_const : forall p a b n, 0 < a -> 0 < b ->  0 < poly_get_last p -> BigO (a ** p) n =< BigO (b ** p) n
-  (* TODO: more highest equiv loosenings *)
-  (* TODO: other loosenings *)
-  
+
   where "T1 '=<' T2" := (loosen T1 T2).
 
 
