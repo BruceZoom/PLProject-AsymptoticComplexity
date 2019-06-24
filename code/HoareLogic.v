@@ -37,11 +37,11 @@ Inductive provable {F: FirstOrderLogic}: hoare_triple -> Prop :=
       provable ({{P}} c {{Q}} $ T2)
 
   | hoare_while_linear : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (n : logical_var) c p,
-    (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (1 < V))) ->
+    (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (0 < V))) ->
     assn_occur n P = O ->
     term_occur n V = O ->
     bexp_occur n b = O ->
-    (forall x, 0 < x -> 0 < poly_eval p x) ->
+    (forall x, 0 < x -> 0 <= poly_eval p x) ->
     (forall x y, x <= y -> poly_eval p x <= poly_eval p y) ->
     provable ({{P AND {[b]} AND V == n}} c {{P AND V == n-1}} $ BigO p n) ->
     provable ({{P AND V == n }} While b Do c EndWhile {{ P AND NOT {[b]} }} $ BigO (LINEAR *** p) n)
@@ -58,5 +58,7 @@ Inductive provable {F: FirstOrderLogic}: hoare_triple -> Prop :=
       provable ({{P}} c {{Q}} $ T).
 
 Notation "|--  tr" := (provable tr) (at level 91, no associativity).
+
+Axiom excluded_middle : forall P, ~ P \/ P.
 
 End Hoare_Logic.
