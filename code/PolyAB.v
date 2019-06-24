@@ -482,9 +482,23 @@ Qed.
 
 End Polynomial'.
 
+Module WZY_Poly_Enhance.
+Export Polynomial.
+
+Inductive list_le : poly -> poly -> Prop :=
+  | nil_le : list_le nil nil
+  | cons_le : forall p1 p2 a1 a2,
+              length p1 = length p2 ->
+              a1 <= a2 ->
+              list_le p1 p2 ->
+              list_le (a1 :: p1) (a2 :: p2).
+
+End WZY_Poly_Enhance.
+
 Module Monomial.
 Export Polynomial.
 Export Polynomial'.
+Export WZY_Poly_Enhance.
 
 Fixpoint poly_get_last (p : poly) : Z := 
   match p with
@@ -963,7 +977,8 @@ Admitted.
 Fact poly_mono_cons: forall p a,
   poly_monomialize (a :: p) = 0 :: poly_monomialize p.
 Proof.
-  intros
+  intros.
+Admitted.
 
 Fact poly_mono_length_invar: forall p : poly,
   length p = length (poly_monomialize p).
@@ -972,15 +987,16 @@ Proof.
   induction p.
   - simpl. omega.
   - simpl.
+Admitted.
 
-Inductive term_by_term_lt (p1 p2 :poly) : Prop :=
-  | TBT_NIL : 
-  end.
+Definition term_by_term_le := list_le.
 
 Lemma poly_each_coef_compare:
   forall p1 p2 n,
-  term_by_term_lt p1 p2 -> poly_eval p1 n <= poly_eval p2 n.
-            
+  term_by_term_le p1 p2 -> poly_eval p1 n <= poly_eval p2 n.
+Proof.
+Admitted.
+
 End Monomial.
 
 Module Polynomial_Asympotitic_Bound.
