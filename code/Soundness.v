@@ -446,7 +446,7 @@ Lemma update_lassn_sep_assn : forall La st n z P,
   assn_occur n P = O ->
   (st, La) |== P <-> (st, (Lassn_update La n z)) |== P.
 Proof.
-  intros.
+  intros. revert La.
   induction P; simpl; try inversion H; split; intros;
     try (apply nat_plus_eqO in H1 as [? ?]);
     try (rewrite <- (update_lassn_sep_term _ _ _ _ _ H1);
@@ -471,8 +471,31 @@ Proof.
       apply H0.
     - rewrite <- (IHP H1); assumption.
     - rewrite (IHP H1); assumption.
-    - Search Interp_Lupdate.
-      Admitted.
+    - unfold Interp_Lupdate in *. simpl in *.
+      rewrite (IHP H1) in H0.
+      pose proof Lassn_update_update_diff st La n x z v n0.
+      rewrite (satisfies_Interp_Equiv _ _ _ H2).
+      exact H0.
+    - unfold Interp_Lupdate in *. simpl in *.
+      rewrite (IHP H1).
+      pose proof Lassn_update_update_diff st La n x z v n0.
+      rewrite <- (satisfies_Interp_Equiv _ _ _ H2).
+      exact H0.
+    - destruct (Nat.eq_dec n x); [inversion H1 |].
+      unfold Interp_Lupdate in *. simpl in *.
+      specialize (H0 v).
+      rewrite (IHP H1) in H0.
+      pose proof Lassn_update_update_diff st La n x z v n0.
+      rewrite (satisfies_Interp_Equiv _ _ _ H2).
+      exact H0.
+    - destruct (Nat.eq_dec n x); [inversion H1 |].
+      unfold Interp_Lupdate in *. simpl in *.
+      specialize (H0 v).
+      rewrite (IHP H1).
+      pose proof Lassn_update_update_diff st La n x z v n0.
+      rewrite <- (satisfies_Interp_Equiv _ _ _ H2).
+      exact H0.
+Qed.
 
 Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (n : logical_var) (C : Z) c p,
   (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (0 < V))) ->
@@ -581,8 +604,7 @@ Proof.
       specialize (H12 H1); clear H1.
       rewrite H5.
       
-      split.
-      omega.
+      split; [omega |].
       rewrite poly_mult_spec, LINEAR_spec in H12.
       rewrite poly_mult_spec, LINEAR_spec.
       assert ((La n - 1) <= (La n)). omega.
