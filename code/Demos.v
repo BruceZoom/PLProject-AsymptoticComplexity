@@ -27,6 +27,9 @@ Ltac entailer :=
     apply convert_IMPLY;
     intros.
 
+Ltac forward_while_linear :=
+    apply (hoare_while_linear TrivialFOL); auto; try omega.
+
 Lemma derives_refl: forall P, P |-- P.
 Proof.
   intros.
@@ -82,7 +85,7 @@ Fact simple_loop_correct : forall (n : logical_var),
       $ BigO (LINEAR *** CONSTANT) n.
 Proof.
   intros.
-  apply (hoare_while_linear TrivialFOL); auto.
+  forward_while_linear.
   - intros.
     simpl in *.
     omega.
@@ -106,40 +109,82 @@ Module Slow_Addition_Demo.
 
 Definition X : var := 0%nat.
 Definition Y : var := 1%nat.
+Definition Z : var := 2%nat.
 
-Lemma pre_loop_der : forall m n,
-  {[X]} == m AND {[Y]} == n AND 0 <= m |--
-  {[X]} + {[Y]} == m + n AND 0 <= m AND {[X]} == m.
+Lemma pre_loop_der : forall (m n o : logical_var),
+  {[X]} == m AND {[Y]} == n AND 0 <= {[X]} AND {[X]} == {[Z]} AND {[Z]} == o |--
+  {[X]} + {[Y]} == m + n AND 0 <= {[X]} AND {[X]} == {[Z]} AND {[Z]} == o.
 Proof.
   entailer.
-  destruct H as [[? ?] ?].
   repeat split; auto; try omega.
 Qed.
 
 Lemma post_loop_der : forall m n,
-  {[X]} + {[Y]} == m + n AND 0 <= m AND NOT {[!(X == 0)]}
+  {[X]} + {[Y]} == m + n AND 0 <= {[X]} AND {[X]} == {[Z]} AND NOT {[!(Z == 0)]}
   |-- {[Y]} == m + n.
 Proof.
   entailer.
   omega.
 Qed.
 
-Fact slow_addition_correct : forall (m n : logical_var),
-  |-- {{ {[X]} == m AND {[Y]} == n AND 0 <= m }}
-      While !(X == 0) Do
+Fact slow_addition_correct : forall (m n o : logical_var),
+  m <> o -> n <> o ->
+  |-- {{ {[X]} == m AND {[Y]} == n AND 0 <= {[X]} AND {[X]} == {[Z]} AND {[Z]} == o }}
+      While !(Z == 0) Do
         Y ::= Y + 1;;
+        Z ::= Z - 1;;
         X ::= X - 1
       EndWhile
       {{ {[Y]} == m + n }}
-      $ BigO LINEAR m.
+      $ BigO LINEAR o.
 Proof.
   intros.
+  rename H into Hmo.
+  rename H0 into Hno.
+  pose proof hoare_while_linear.
   eapply hoare_consequence.
   apply pre_loop_der.
   2:{ apply post_loop_der. }
-  apply hoare_while_linear.
-  pose proof 
-  
+  assert (BigO (LINEAR *** (3 ** CONSTANT)) o =< BigO (3 ** LINEAR) o).
+  {
+    apply O_id.
+    intros.
+    rewrite poly_mult_spec, poly_scalar_mult_spec,
+      poly_scalar_mult_spec, CONSTANT_spec.
+    ring.
+  }
+  assert (BigO (3 ** LINEAR) o =< BigO LINEAR o).
+  {
+    admit.
+  }
+  eapply hoare_loosen. apply H1.
+  eapply hoare_loosen. apply H0.
+  forward_while_linear.
+  - intros.
+    simpl. simpl in H2.
+    omega.
+  - simpl.
+    destruct (Nat.eq_dec o m); [congruence |].
+    destruct (Nat.eq_dec o n); [congruence | auto].
+  - intros.
+    rewrite poly_scalar_mult_spec, CONSTANT_spec.
+    omega.
+  - intros.
+    repeat rewrite poly_scalar_mult_spec, CONSTANT_spec.
+    omega.
+  - eapply hoare_loosen.
+    apply Theta2O.
+    simpl. omega.
+    assert (BigTheta (CONSTANT +++ (CONSTANT +++ CONSTANT)) o =< BigTheta (3 ** CONSTANT) o).
+    {
+      apply Theta_id.
+      intros.
+      repeat rewrite poly_add_spec.
+      rewrite poly_scalar_mult_spec.
+      repeat rewrite CONSTANT_spec.
+      ring.
+    }
+    eapply hoare_seq_bigtheta.
 Admitted.
 
 End Slow_Addition_Demo.
