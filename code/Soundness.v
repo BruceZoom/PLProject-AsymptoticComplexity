@@ -361,9 +361,11 @@ Proof.
     { pose proof poly_get_max3 p (poly_get_last p).
       destruct p.
       - simpl in H. omega.
-      - pose proof poly_get_last_in_poly z p.
-        pose proof H1 H2.
-        pose proof Z.lt_le_trans _ _ _ H H3.
+      - remember (z::p) as l.
+        pose proof poly_get_last_in_poly l.
+        pose proof H2 p_nnil.
+        pose proof H1 H3.
+        pose proof Z.lt_le_trans _ _ _ H H4.
         omega.
     }
     split. omega.

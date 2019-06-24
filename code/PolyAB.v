@@ -857,7 +857,7 @@ Qed.
 Lemma poly_distr_coef_compare:
   forall K (N : nat) n,
   K > 0 ->
-  n > 0 ->
+  n >= 0 ->
   poly_eval ((repeat 0 (Z.to_nat (Z.of_nat N-1))) ++ (K * Z.of_nat N)::nil) n >= 
   poly_eval (repeat K N) n.
 Proof.
