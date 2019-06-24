@@ -1128,10 +1128,11 @@ Inductive loosen : AsymptoticBound -> AsymptoticBound -> Prop :=
   | O_id : forall p1 p2 n, (forall z, poly_eval p1 z = poly_eval p2 z) -> BigO p1 n =< BigO p2 n
   | Theta_id : forall p1 p2 n, (forall z, poly_eval p1 z = poly_eval p2 z) -> BigTheta p1 n =< BigTheta p2 n
   | Omega_id : forall p1 p2 n, (forall z, poly_eval p1 z = poly_eval p2 z) -> BigOmega p1 n =< BigOmega p2 n
+  | O_const : forall p a b n, 0 < a -> 0 < b ->  0 < poly_get_last p -> BigO (a ** p) n =< BigO (b ** p) n
   (* TODO: more highest equiv loosenings *)
   (* TODO: other loosenings *)
   
   where "T1 '=<' T2" := (loosen T1 T2).
-  
+
 
 End Polynomial_Asympotitic_Bound.

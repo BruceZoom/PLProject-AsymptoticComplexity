@@ -521,6 +521,56 @@ Proof.
         rewrite H in H6.
         exact H6.
     }
+    (* O_Const *)
+    { exists a1.
+      exists (a * a2).
+      split. omega.
+      split. apply Z.mul_pos_pos. apply H. apply h2.
+      intros.
+      specialize (H0 La st1 st2 t).
+      pose proof H0 H3 H4.
+      destruct H5.
+      split.
+      - tauto.
+      - simpl. simpl in H6. intros.
+        pose proof H6 H7.
+        pose proof poly_scalar_mult_spec b p (La n).
+        rewrite H9.
+        rewrite Z.mul_assoc.
+        pose proof poly_scalar_mult_spec a p (La n).
+        rewrite H10 in H8.
+        rewrite Z.mul_assoc in H8.
+        assert (a2 * a <= a * a2 * b).
+        { rewrite <- Z.mul_comm.
+          assert (1 <= b). omega.
+          pose proof Z.mul_le_mono_nonneg_l 1 b (a * a2).
+          rewrite Z.mul_1_r in H12.
+          apply H12.
+          apply Z.mul_nonneg_nonneg.
+          omega. omega. omega.
+        }
+        assert (a2 * a * poly_eval p (La n) <= a * a2 * b * poly_eval p (La n)).
+        { pose proof Z.mul_le_mono_nonneg_r (a2 * a) (a * a2 * b) (poly_eval p (La n)).
+          apply H12.
+          assert (0 < a2 * a).
+          { apply Z.mul_pos_pos.
+            omega. omega.
+          }
+          assert (0 <= poly_eval p (La n)).
+          { pose proof Zmult_le_0_reg_r (a2 * a) (poly_eval p (La n)).
+            pose proof Z.lt_gt _ _ H13 as H13'.
+            pose proof H14 H13'.
+            assert (0 <= (a2 * a) * poly_eval p (La n)). omega.
+            assert (0 <= poly_eval p (La n) * (a2 * a)).
+            { rewrite Z.mul_comm. omega. }
+            pose proof H15 H17.
+            omega.
+          }
+          omega.
+          omega.
+        }
+        omega.
+     }
 Qed.
 
 Print aexp.
