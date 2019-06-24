@@ -968,11 +968,28 @@ Proof.
         apply Z.le_ge.
         pose proof Zplus_le_compat_r (n ^ Z.of_nat (N - 1) * (K * Z.of_nat N)) (n ^ Z.of_nat N * (K * Z.of_nat N)) (K * n ^ Z.of_nat N).
         assert (n ^ Z.of_nat (N - 1) * (K * Z.of_nat N) <= n ^ Z.of_nat N * (K * Z.of_nat N)).
-        { clear H5.
-          
-        
-        
-Admitted.
+        { clear H5. 
+          pose proof Z.mul_le_mono_nonneg_r (n ^ Z.of_nat (N - 1)) (n ^ Z.of_nat N) (K * Z.of_nat N).
+          assert (0 <= K * Z.of_nat N ).
+          pose proof Z.mul_nonneg_nonneg K (Z.of_nat N).
+          assert (0<=K). omega. pose proof H6 H7.
+          assert (0<=Z.of_nat N). omega. pose proof H8 H9.
+          exact H10.
+          pose proof H5 H6.
+          assert (n ^ Z.of_nat (N - 1) <= n ^ Z.of_nat N). omega.
+          tauto.
+        }
+     pose proof H5 H6.
+     tauto.
+   }
+   assert (n ^ Z.of_nat (N - 1) * (K * Z.of_nat N) + K * n ^ Z.of_nat N >= K * n ^ Z.of_nat N + poly_eval (repeat K N) n).
+   { apply Z.le_ge.
+     pose proof Zplus_le_compat_l (poly_eval (repeat K N) n) (n ^ Z.of_nat (N - 1) * (K * Z.of_nat N)) (K * n ^ Z.of_nat N).
+     apply Z.ge_le in IHN.
+     pose proof H3 IHN. omega.
+   }
+  omega.
+Qed.
 
 Fact poly_mono_cons: forall a h t,
   poly_monomialize (a :: h :: t) = 0 :: poly_monomialize (h :: t).
