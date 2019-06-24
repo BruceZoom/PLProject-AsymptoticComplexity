@@ -835,10 +835,30 @@ Proof.
   tauto.
 Qed.
 
-Theorem hoare_logic_sound (F: FirstOrderLogic) : forall P Q c T,
+Theorem hoare_logic_sound (F: FirstOrderLogic) (TS: FOL_sound F) : forall P Q c T,
   |-- {{P}} c {{Q}} $ T ->
   |== {{P}} c {{Q}} $ T.
 Proof.
-(* TODO: Fill in here *)
-Admitted.
+  intros.
+  induction H.
+  - apply hoare_skip_sound.
+  - apply hoare_asgn_bwd_sound.
+  - eapply hoare_seq_bigtheta_sound.
+    apply IHprovable1.
+    apply IHprovable2.
+  - apply hoare_if_same_sound.
+    apply IHprovable1.
+    apply IHprovable2.
+  - eapply hoare_loosen_sound.
+    apply H.
+    apply IHprovable.
+  - apply hoare_while_linear_sound;
+    try assumption.
+    apply 1.
+  - eapply hoare_consequence_sound.
+    apply TS.
+    apply H.
+    apply IHprovable.
+    apply H1.
+Qed.
 (** [] *)
