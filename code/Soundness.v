@@ -338,25 +338,25 @@ Proof.
   (* O_Poly2Mono *)
   {
     exists a1.
-    exists ((poly_get_max p 0)*(Z.of_nat (length p))*a2).
-    assert (forall (N:nat) (z:Z), (Datatypes.length (repeat z N)) = N) as lem_repeat.
+    exists ((poly_get_max p 0)*(Z.of_nat (length p))*a2). (* set upper bound *)
+    assert (forall (N:nat) (z:Z), (Datatypes.length (repeat z N)) = N) as lem_repeat. (* lem_repeat *)
     { intros. simpl.
       induction N.
       - simpl. reflexivity.
       - simpl. rewrite IHN. reflexivity.
     }
-    assert (length p <> 0)%nat as p_gt0.
+    assert (length p <> 0)%nat as p_gt0. (* length p > 0 *)
     { unfold not. intros.
       apply length_zero_iff_nil in H1.
       subst. simpl in H. 
       omega.
     }
-    assert (p <> nil) as p_nnil.
+    assert (p <> nil) as p_nnil. (* p <> nil *)
     { unfold not. intros.
       subst. simpl in H.
       omega.
     }
-    assert (poly_get_max p 0 > 0).
+    assert (poly_get_max p 0 > 0). (* max elem in poly (default 0) > 0 *)
     { pose proof poly_get_max3 p (poly_get_last p).
       destruct p.
       - simpl in H. omega.
@@ -367,11 +367,10 @@ Proof.
         pose proof Z.lt_le_trans _ _ _ H H4.
         omega.
     }
-    split. omega.
+    split. omega. (* prove the coef makes sense *)
     split. assert (a2 > 0) as h2'. { omega. }
     assert (Z.of_nat (length p)> 0).
     { pose proof Nat2Z.is_nonneg (length p).
-
       omega.
     }
     pose proof Zmult_gt_0_compat _ _ H1 H2.
@@ -385,8 +384,9 @@ Proof.
     - tauto.
     - simpl. intros. 
       simpl in H4. pose proof H4 H5.
-      assert (a2 * poly_eval p (La n) <= poly_get_max p 0 * (Z.of_nat (Datatypes.length p)) * a2 * poly_eval (poly_monomialize p) (La n)).
-      { pose proof poly_eval_mono p (La n).
+      assert (a2 * poly_eval p (La n) <= poly_get_max p 0 * (Z.of_nat (Datatypes.length p)) * a2 * poly_eval (poly_monomialize p) (La n)). (* loosen right side of the ineq *)
+      { (* first step of loosen => distribute coeffcients among all terms *)
+        pose proof poly_eval_mono p (La n).
         rewrite H7.
         pose proof poly_distr_coef_compare (poly_get_max p 0) (Datatypes.length p) (La n).
         pose proof Z.lt_gt _ _ H5 as H5'.
@@ -398,7 +398,8 @@ Proof.
         rewrite H8 in H9. clear H8.
         rewrite Z.add_0_l in H9.
        
-        pose proof lem_repeat (Z.to_nat (Z.of_nat (Datatypes.length p) - 1)).
+        (* simplify the result we get *)
+        pose proof lem_repeat (Z.to_nat (Z.of_nat (Datatypes.length p) - 1)). 
         rewrite H8 in H9. clear H8.
         pose proof Z2Nat.id (Z.of_nat (Datatypes.length p) - 1).
         assert (0 <= Z.of_nat (Datatypes.length p) - 1).
@@ -410,8 +411,9 @@ Proof.
         rewrite H8 in H9. clear H8.
         apply Z.ge_le in H9.
         rewrite Z.mul_comm in H9.
-        rename H9 into FirstPart.
+        rename H9 into FirstPart. (* <-- FirstPart of the Proof *)
         
+        (* prove p is term-by-term less than/equal to the loosened result *)
         assert (term_by_term_le p (repeat (poly_get_max p 0) (Datatypes.length p))).
         { unfold term_by_term_le.
           clear H H0 H1 H2 H3 H4 H5 H5' H6 H7 p_gt0 p_nnil FirstPart.
@@ -427,6 +429,8 @@ Proof.
               specialize (H z).
               apply H. simpl. auto.
          }
+         
+         (* second step of loosen => term by term *)
          pose proof poly_each_coef_compare p (repeat (poly_get_max p 0) (Datatypes.length p)).
          pose proof lem_repeat (Datatypes.length p) (poly_get_max p 0).
          apply eq_sym in H10.
@@ -435,11 +439,14 @@ Proof.
          specialize (H9 (La n)).
          assert (0 <= La n). omega.
          pose proof H9 H8. clear H9 H8.
-         rename H10 into SecondPart.
+         rename H10 into SecondPart. (* <-- SecondPart of the Proof *)
          
+         (* combine the result of the first part and the second part *)
          pose proof Z.le_trans _ _ _ SecondPart FirstPart.
-         rename H8 into ThirdPart.
+         rename H8 into ThirdPart. (* <-- ThirdPart of the Proof *)
          
+         (* third step of loosen => manipulating coefficients *)
+         (* if the choice of coef of monomial changes, modify this part *)
          assert (a2 <= a2 * (poly_get_last p)) as FourthPart.
          { assert (1 <= poly_get_last p). omega.
            pose proof Z.mul_le_mono_nonneg 1 (poly_get_last p) a2 a2.
@@ -450,7 +457,7 @@ Proof.
            rewrite Z.mul_1_l in H13.
            rewrite Z.mul_comm in H13.
            exact H13.
-         }
+         } (* <-- FourthPart of the Proof *)
          pose proof Z.mul_le_mono_nonneg a2 (a2 * (poly_get_last p)) (poly_eval p (La n)) (poly_get_max p 0 * Z.of_nat (Datatypes.length p) * La n ^ (Z.of_nat (Datatypes.length p) - 1)).
          assert (0 <= a2). omega.
          pose proof H8 H9 FourthPart.
@@ -471,9 +478,9 @@ Proof.
          rename H13 into final.
          exact final.
       }
-      omega.
+      omega. (* <-- End of the Proof *)
     }
-    (* O_Poly2Mono *)
+    (* O_id *)
     { exists a1, a2.
       split. omega.
       split. omega.
