@@ -1038,10 +1038,20 @@ Qed.
 Definition term_by_term_le := list_le.
 
 Lemma poly_each_coef_compare:
-  forall p1 p2 n,
-  term_by_term_le p1 p2 -> poly_eval p1 n <= poly_eval p2 n.
+  forall p1 p2,
+  length p1 = length p2 ->
+  term_by_term_le p1 p2 ->
+  forall n, 0 <= n ->
+  poly_eval p1 n <= poly_eval p2 n.
 Proof.
-Admitted.
+  intros.
+  induction H0.
+  - omega.
+  - simpl.
+    pose proof IHlist_le H0.
+    apply Z.add_le_mono; auto.
+    apply Z.mul_le_mono_nonneg_l; auto.
+Qed.
 
 End Monomial.
 
