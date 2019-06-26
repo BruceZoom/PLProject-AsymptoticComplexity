@@ -55,14 +55,15 @@ Inductive provable {F: FirstOrderLogic}: hoare_triple -> Prop :=
   4) (forall x y, x <= y -> poly_eval p x <= poly_eval p y):
       The time cost increases as input size increase.
 *)
-  | hoare_while_linear : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (n : logical_var) c p,
+  | hoare_while_linear : forall (T: FirstOrderLogic) P (b : bexp) (V : term) (n : logical_var) (C : Z) c p,
     (forall st La, ((st, La) |== (P AND {[b]})) -> ((st, La) |== (0 < V))) ->
     assn_occur n P = O ->
     term_occur n V = O ->
     bexp_occur n b = O ->
+    0 < C ->
     (forall x, 0 < x -> 0 <= poly_eval p x) ->
     (forall x y, x <= y -> poly_eval p x <= poly_eval p y) ->
-    provable ({{P AND {[b]} AND V == n}} c {{P AND V == n-1}} $ BigO p n) ->
+    provable ({{P AND {[b]} AND V == n}} c {{P AND V == n-C}} $ BigO p n) ->
     provable ({{P AND V == n }} While b Do c EndWhile {{ P AND NOT {[b]} }} $ BigO (LINEAR *** p) n)
 (** Consequence rule holds for the Hoare logic, if time complexity stays unchanged *)
   | hoare_consequence : forall (P P' Q Q' : Assertion) c (T : AsymptoticBound),

@@ -777,18 +777,20 @@ Lemma hoare_while_linear_sound : forall (T: FirstOrderLogic) P (b : bexp) (V : t
   assn_occur n P = O ->
   term_occur n V = O ->
   bexp_occur n b = O ->
+  0 < C ->
   (forall x, 0 < x -> 0 <= poly_eval p x) ->
   (forall x y, x <= y -> poly_eval p x <= poly_eval p y) ->
-  |== {{P AND {[b]} AND V == n}} c {{P AND V == n-1}} $ BigO p n ->
+  |== {{P AND {[b]} AND V == n}} c {{P AND V == n-C}} $ BigO p n ->
   |== {{P AND V == n }} While b Do c EndWhile {{ P AND NOT {[b]} }} $ BigO (LINEAR *** p) n.
 Proof.
   intros.
   rename H0 into Hao.
   rename H1 into Hto.
   rename H2 into Hbo.
-  rename H3 into Hpre.
-  rename H4 into Hinc.
-  rename H5 into H0.
+  rename H3 into HC.
+  rename H4 into Hpre.
+  rename H5 into Hinc.
+  rename H6 into H0.
   unfold valid in *.
   destruct H0 as [a1 [a2 [h1 [h2 ?]]]].
   simpl in H0.
@@ -861,31 +863,31 @@ Proof.
 (**
   Use the lemmas we proved before to utilize the induction hypothesis to obtain propositions about later rounds of the loop.
 *)
-    assert (Lassn_update La n (La n - 1) n = La n - 1) as Hupn.
+    assert (Lassn_update La n (La n - C) n = La n - C) as Hupn.
     {
       unfold Lassn_update.
       destruct (Nat.eq_dec n n); [auto | congruence].
     }
-    assert (term_denote (st3, Lassn_update La n (La n - 1)) V = Lassn_update La n (La n - 1) n).
+    assert (term_denote (st3, Lassn_update La n (La n - C)) V = Lassn_update La n (La n - C) n).
     {
-      pose proof update_lassn_sep_term La st3 V n (La n - 1) Hto.
+      pose proof update_lassn_sep_term La st3 V n (La n - C) Hto.
       rewrite <- H11. rewrite H9.
       rewrite Hupn. reflexivity.
     }
-    assert ((st3, Lassn_update La n (La n - 1)) |== P).
+    assert ((st3, Lassn_update La n (La n - C)) |== P).
     {
-      pose proof update_lassn_sep_assn La st3 n (La n - 1) P Hao.
+      pose proof update_lassn_sep_assn La st3 n (La n - C) P Hao.
       rewrite H12 in H8.
       exact H8.
     }
-    pose proof IHn' (Lassn_update La n (La n - 1)) t2 st3 H12 H11 H4; clear H11 H12.
+    pose proof IHn' (Lassn_update La n (La n - C)) t2 st3 H12 H11 H4; clear H11 H12.
     destruct H13.
     split.
     + (* Basic proposition *)
       destruct H11.
-      pose proof update_lassn_sep_assn La st2 n (La n - 1) P Hao.
+      pose proof update_lassn_sep_assn La st2 n (La n - C) P Hao.
       rewrite <- H14 in H11; clear H14.
-      pose proof update_lassn_sep_assn La st2 n (La n - 1) (NOT {[b]}).
+      pose proof update_lassn_sep_assn La st2 n (La n - C) (NOT {[b]}).
       split. exact H11.
       rewrite H14. exact H13.
       simpl. exact Hbo.
@@ -894,8 +896,40 @@ Proof.
   Here we need to discuss the input size case by case again. Because if n = 1, there is no second round of the loop, and we can not relax any time cost term except the one of the first round since we know nothing about other rounds.
   The excluded_middle axiom is use here.
 *)
-      pose proof excluded_middle (La n = 1).
+      pose proof excluded_middle (La n > C).
       destruct H13.
+      {
+(**
+    If n = 1, the time cost for later rounds, t2, is exactly 0.
+    T = t1 + 0 <= a2 * P(1) <= a2 * 1 * P(1) = a2 * n * P(n)
+    We still need to discuss loop time n' to get some properties.
+*)
+        destruct n'.
+        + (* we want to use the case where no more loop is carried out *)
+          destruct H4 as [[? ?] ?].
+          subst. unfold ab_eval; intros.
+          specialize (H10 Hn).
+          rewrite poly_mult_spec, LINEAR_spec.
+          rewrite <- Zmult_assoc_reverse.
+          assert (a2 * La n = La n * a2). apply Z.mul_comm.
+          rewrite H5; clear H5.
+          assert (a2 * poly_eval p (La n) <= La n * a2 * poly_eval p (La n)).
+          {
+            rewrite <- Z.mul_1_l at 1.
+            rewrite Zmult_assoc_reverse.
+            apply Z.mul_le_mono_nonneg_r; try omega.
+          }
+          omega.
+        + (* by the derivation from loop invariant and loop condition to status of loop variant (1), this case is impossible *)
+          exfalso.
+          apply H13.
+          destruct H4 as [? ?].
+          rewrite (beval_bexp'_denote st3 La b) in H14.
+          assert ((st3, La) |== P AND {[b]}). simpl. tauto.
+          pose proof H _ _ H15; clear H15.
+          simpl in H16. rewrite H9 in H16.
+          omega.
+      }
       {
 (**
   If n <> 1, combined with the status of loop variant we derived before, we have n > 1. By increasingness of the bound, we can relax the time cost based on (\*\) and prove the goal.
@@ -906,20 +940,20 @@ Proof.
         intros.
 
         specialize (H10 H1); clear H1.
-        assert (0 < La n - 1). omega.
+        assert (0 < La n - C). omega.
         specialize (H12 H1); clear H1.
         rewrite H5.
 
         split; [omega |].
         rewrite poly_mult_spec, LINEAR_spec in H12.
         rewrite poly_mult_spec, LINEAR_spec.
-        assert ((La n - 1) <= (La n)). omega.
-        pose proof Hinc (La n - 1) (La n) H1.
-        assert (t2 <= a2 * ((La n - 1) * poly_eval p (La n))).
+        assert ((La n - C) <= (La n)). omega.
+        pose proof Hinc (La n - C) (La n) H1.
+        assert (t2 <= a2 * ((La n - C) * poly_eval p (La n))).
         {
-          assert ((La n - 1) * poly_eval p (La n - 1) <= (La n - 1) * poly_eval p (La n)).
+          assert ((La n - C) * poly_eval p (La n - C) <= (La n - C) * poly_eval p (La n)).
           {
-            assert (0 <= La n - 1). omega.
+            assert (0 <= La n - C). omega.
             apply Z.mul_le_mono_nonneg_l.
             exact H3. exact H2.
           }
@@ -934,43 +968,19 @@ Proof.
         pose proof Z.add_le_mono _ _ _ _ H6 H3.
         rewrite Z.mul_assoc.
         rewrite Z.mul_assoc in H7.
-        assert (La n = 1 + (La n - 1)). omega.
+        assert (La n = C + (La n - C)). omega.
         rewrite H8 at 1; clear H8.
         rewrite Z.mul_add_distr_l.
         rewrite Z.mul_add_distr_r.
-        rewrite Z.mul_1_r.
-        exact H7.
-      }
-      {
-(**
-    If n = 1, the time cost for later rounds, t2, is exactly 0.
-    T = t1 + 0 <= a2 * P(1) <= a2 * 1 * P(1) = a2 * n * P(n)
-    We still need to discuss loop time n' to get some properties.
-*)
-        rewrite H13 in *; clear H13.
-        destruct n'.
-        + (* we want to use the case where no more loop is carried out *)
-          destruct H4 as [[? ?] ?].
-          subst. unfold ab_eval; intros.
-          specialize (H10 Hn).
-          rewrite poly_mult_spec, LINEAR_spec.
-          assert (poly_eval p 1 <= La n * poly_eval p (La n)).
-          {
-            assert (1 <= La n). omega.
-            assert (poly_eval p 1 = 1 * poly_eval p 1). ring.
-            rewrite H13; clear H13.
-            apply Z.mul_le_mono_nonneg; try omega.
-            apply Hpre. omega.
-            apply Hinc. auto.
-          }
-          apply (Z.mul_le_mono_nonneg_l (poly_eval p 1) (La n * poly_eval p (La n)) a2) in H5; omega.
-        + (* by the derivation from loop invariant and loop condition to status of loop variant (1), this case is impossible *)
-          destruct H4 as [? ?].
-          rewrite (beval_bexp'_denote st3 La b) in H13.
-          assert ((st3, La) |== P AND {[b]}). simpl. tauto.
-          pose proof H _ _ H14; clear H14.
-          simpl in H15. rewrite H9 in H15.
-          inversion H15.
+        assert (a2 * poly_eval p (La n) <= a2 * C * poly_eval p (La n)).
+        {
+          rewrite <- Z.mul_1_l at 1.
+          assert (a2 * C = C * a2). apply Zmult_comm.
+          rewrite H8; clear H8.
+          rewrite Zmult_assoc_reverse.
+          apply Z.mul_le_mono_nonneg_r; try omega.
+        }
+        omega.
       }
 Qed.
 
@@ -1035,9 +1045,8 @@ Proof.
   - eapply hoare_loosen_sound.
     apply H.
     apply IHprovable.
-  - apply hoare_while_linear_sound;
+  - apply hoare_while_linear_sound with C;
     try assumption.
-    apply 1.
   - eapply hoare_consequence_sound.
     apply TS.
     apply H.

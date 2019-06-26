@@ -28,7 +28,8 @@ Ltac entailer :=
     intros.
 
 Ltac forward_while_linear :=
-    apply (hoare_while_linear TrivialFOL); auto; try omega.
+    try (apply (hoare_while_linear TrivialFOL) with 1; auto; try omega);
+    try (eapply (hoare_while_linear TrivialFOL); auto; try omega).
 
 Lemma derives_refl: forall P, P |-- P.
 Proof.
