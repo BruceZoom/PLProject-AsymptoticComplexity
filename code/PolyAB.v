@@ -1,4 +1,4 @@
-Require Import AB.Imp8.
+Require Import AB.Imp9.
 Require Import Coq.ZArith.ZArith.
 Require Import Coq.Lists.List.
 
@@ -26,7 +26,7 @@ Fixpoint poly_eval (p : poly) : Z -> Z :=
     end.
 
 Open Scope term_scope.
-Print aexp'.
+(* Print aexp'. *)
 
 Fixpoint TPower (v : logical_var) (n : nat) : term :=
   match n with
@@ -423,7 +423,6 @@ Proof.
     simpl.
     assert (Datatypes.length (p1 ++ repeat 0 (Datatypes.length p2)) = Datatypes.length (p1 ++ p2)).
     { clear IHp1 H.
-      Search (length (_ ++ _)).
       assert (Datatypes.length (repeat 0%Z (Datatypes.length p2)) = Datatypes.length p2).
       { induction p2.
         - simpl. reflexivity.
